@@ -1,0 +1,38 @@
+1.0.1: Sat Jun 30 17:39:08 PDT 2007
+
+* Updated TODO list
+* Get a rid of all the CVS Id tags
+* Clean up jesus module to not have footnotes
+* Stock module can now do mutual funds
+
+1.0.2: Sat Jun 30 22:32:09 PDT 2007
+
+* Refactor module API to expose more data to the extensions
+* Move seen/factoids/memebot into standard extension API
+* Add namespace config for unique database files
+* Added some startup verbosity
+* Listed a description of all base modules in config
+* Allow modules to be disabled in config file
+
+1.0.3: Sun Jul  1 19:27:09 PDT 2007
+
+* A bunch of necessary code cleanup to the module framework
+* Rewrote the Config class to be more efficient
+* Added -v flag for verbosity when executed in a console
+* Fixed grufti from triggering on substring matches
+* Grufti module now precompiles regexes at loadtime
+
+1.0.4: Thu Jul  5 19:21:38 PDT 2007
+
+* NEW: django frontend for memebot (see http://memebot.gruntle.org/ for ex.)
+* Fix bug with SILC private messages
+* Remove typo in memebot insult list
+* Improve weather.py module's logic to work with ambiguous serach results
+* Improve documentation
+
+1.0.5: Fri Jul  6 19:26:04 PDT 2007
+
+* Bundle python-irclib to make installation easier
+* Bugfix: Can now properly use IP addresses as hostnames
+* Add a flexible throttling module
+* Add throttling to memebot for URL postings to prevent gaming
