@@ -1,0 +1,169 @@
+[main]
+;
+; specify protocol module to use. you can override this with the -p
+; switch when run from the commandline
+;
+module=irc
+;module=cli
+;module=aim
+;module=silcplugin
+;
+; whether to daemonize when run (POSIX only). you can force the bot to
+; detach by specifying -d on the commandline.
+;
+detach=no
+;
+; setting this to yes will log public chatter in the logs directory
+; (IRC and SILC)
+;
+logpublic=yes
+;
+; these nicks will be completely ignored in public settings such as
+; IRC or SILC. you should put other bots that reside in the channel
+; in this list to prevent feedback loops.
+;
+;ignoreList=somebot, abusiveGuy
+;
+; set this to log console output to a file in madcow base directory
+loglevel=INFO           ; default level, valid options are DEBUG, INFO, WARN
+logfile=madcow.log      ; leave blank for no file-level logging
+;
+; encode output to this format (latin1, utf8, ascii, etc.)
+; most common terminals default to latin1, so this is the default of madcow.
+; encoding to utf8 will allow you to support a wider range of output,
+; such as cyrillics, japanese etc. if you set this to ascii, any values
+; from 128-255 will be set to '?'. this is not recommended, as many of the
+; modules (such as weather, wikipedia, etc) that retrieve from the web make
+; use of unicode characters.
+charset=latin1
+
+[modules]
+; if you wish to run multiple bots from the same directory you should
+; give them a unique namespace. this is used to name the db files
+; something unique. if you do not change this, then multiple bots will
+; share the same backend data store.  this may be what you want. but
+; probably not.
+;
+dbNamespace=madcow
+;
+; what modules are enabled (yes/no)
+area=yes                ; look up area codes
+artfart=yes             ; random ascii art
+babel=yes               ; language translations
+bash=yes                ; bash quotes
+bbcnews=yes             ; bbc news headlines
+bible=yes               ; jesus quotes
+calc=yes                ; google calculator
+chp=yes                 ; california real-time traffic reports
+conservapedia=yes       ; look up inaccurate conservative information
+dictionary=yes          ; definition of words
+factoids=yes            ; makes madcow remember stuff from chatter
+google=yes              ; i'm feeling lucky query
+grufti=yes              ; random response triggeres, like grufti bot
+hugs=yes                ; random group hug confession
+jinx=yes                ; someone owes you a coke for being unoriginal
+karma=yes               ; keep track of karma (nick++, nick--)
+learn=yes               ; used for various modules to cache per-user data
+livejournal=yes         ; random livejournal entry
+lyrics=yes              ; look up song lyrics
+memebot=yes             ; track urls and lay smackdown on old memes
+movie=yes               ; rate movie on imdb & rotten tomatoes
+nslookup=yes            ; look up ip of hostnames
+roll=yes                ; roll ad&d dice
+seen=yes                ; keep track of last thing everyone in channel said
+slut=yes                ; how slutty is the phrase?
+stockquote=yes          ; get yahoo stock quotes
+stupid=yes              ; random quote from stupid-project
+summon=yes              ; summon users (send email/sms)
+urban=yes               ; look up word/phrase on urban dictionary
+war=yes                 ; current war status
+weather=yes             ; look up weather from wunderground
+webtender=yes           ; how to make drinks
+wikipedia=yes           ; look up summary from wikipedia
+wikiquotes=yes          ; look up quotes from wikiquotes
+woot=yes                ; latest woot offer
+yourmom=yes             ; yourmom ascii art
+
+; admin module
+[admin]
+enabled=yes
+allowRegistration=yes
+;
+; default flags for new users
+;
+; a = admin
+; r = registered
+;
+defaultFlags=r
+
+; connection settings for IRC plugin. should be fairly obvious
+; channels is a comma-delimited list of channels to join
+[irc]
+host=localhost
+port=6667
+nick=madcow
+channels=#madcow
+reconnect=yes
+reconnectWait=3
+rejoin=yes
+rejoinWait=3
+rejoinReply=
+oper=no
+operUser=
+operPass=
+; if you don't want wrapping, set this very high. the rfc has
+; a limitation and your bot WILL get dropped for sending raw
+; messages that exceed it. 400 is a good number if you are
+; against wrapping
+wrapSize=400
+
+
+; settings for AIM plugin. you need to register a screenname 
+; with AOL beforehand and plug it in here.  see aim.com
+[aim]
+username=
+password=
+profile=
+
+; settings for SILC plugin. channels are a comma-delimited list
+[silcplugin]
+nick=madcow
+channels=#madcow
+host=localhost
+port=706
+reconnect=yes
+reconnectWait=3
+
+; smtp settings for summon module
+[smtp]
+server=localhost
+sender=madcow@example.com
+user=
+password=
+
+; service for email gateway (sms, etc)
+[gateway]
+enabled=yes
+bind=localhost
+port=5000
+channel=#madcow
+
+; twitter settings
+[twitter]
+enabled=no
+channel=#madcow
+updatefreq=60
+username=twitterbotaccount
+password=twitterbotpassword
+
+; database config (mysql and sqlite supported)
+; NOTE: if you use the web frontend, i recommend mysql, as sqlite has
+; serious concurrency issues
+[memebot]
+db_engine=sqlite
+db_name=memebot         
+db_user=memebot
+db_pass=memebot
+db_host=localhost
+db_port=3306
+
