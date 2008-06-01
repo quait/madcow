@@ -1,0 +1,199 @@
+[main]
+;
+; specify protocol module to use. you can override this with the -p
+; switch when run from the commandline
+;
+module=cli
+;module=irc
+;module=aim
+;module=silcplugin
+;
+; whether to daemonize when run (POSIX only). you can force the bot to
+; detach by specifying -d on the commandline.
+;
+detach=no
+;
+; setting this to yes will log public chatter in the logs directory
+; (IRC and SILC)
+;
+logpublic=yes
+;
+; these nicks will be completely ignored in public settings such as
+; IRC or SILC. you should put other bots that reside in the channel
+; in this list to prevent feedback loops.
+;
+;ignoreList=somebot, abusiveGuy
+;
+; set this to log console output to a file in madcow base directory
+loglevel=WARN           ; default level, valid options are DEBUG, INFO, WARN
+logfile=madcow.log      ; leave blank for no file-level logging
+;
+; encode output to this format (latin1, utf8, ascii, etc.)
+; most common terminals default to latin1, so this is the default of madcow.
+; encoding to utf8 will allow you to support a wider range of output,
+; such as cyrillics, japanese etc. if you set this to ascii, any values
+; from 128-255 will be set to '?'. this is not recommended, as many of the
+; modules (such as weather, wikipedia, etc) that retrieve from the web make
+; use of unicode characters.
+charset=latin1
+;
+; nickname of the bot owner. when you first register with the bot, if the
+; nick matches, you will be granted admin privileges.
+owner=nick
+
+[modules]
+; if you wish to run multiple bots from the same directory you should
+; give them a unique namespace. this is used to name the db files
+; something unique. if you do not change this, then multiple bots will
+; share the same backend data store.  this may be what you want. but
+; probably not. concurrency problems have not been considered, so prolly
+; don't even try running multiple bots with the same namespace.
+;
+dbNamespace=madcow
+;
+; what modules are enabled (yes/no)
+;
+; these are the standard information modules, which you'll probably
+; want enabled as they are quite useful.
+area=yes                ; look up area codes
+babel=yes               ; language translations
+bbcnews=yes             ; bbc news headlines
+calc=yes                ; google calculator
+dictionary=yes          ; definition of words
+google=yes              ; i'm feeling lucky query
+learn=yes               ; used for various modules to cache per-user data
+movie=yes               ; rate movie on imdb & rotten tomatoes
+nslookup=yes            ; look up ip of hostnames
+seen=yes                ; keep track of last thing everyone in channel said
+stockquote=yes          ; get yahoo stock quotes
+summon=yes              ; summon users (send email/sms)
+urban=yes               ; look up word/phrase on urban dictionary
+weather=yes             ; look up weather from wunderground
+wikipedia=yes           ; look up summary from wikipedia
+wikiquotes=yes          ; look up quotes from wikiquotes
+;
+; the following modules are either silly, or potentially annoying/offensive.
+; they are disabled by default so you can make the decision about how
+; obnoxious your bot is able to be.
+;
+artfart=no             ; random ascii art
+bash=no                ; bash (irc/im) quotes
+bible=no               ; get a quote from the bible
+chp=no                 ; california real-time traffic reports
+conservapedia=no       ; look up inaccurate "conservative information"
+delicious=no           ; post all urls to delicious (see config below)
+factoids=no            ; makes madcow remember stuff from chatter
+grufti=no              ; random response triggeres, like grufti bot
+hugs=no                ; random group hug confession
+jinx=no                ; someone owes you a coke for being unoriginal
+karma=no               ; keep track of karma (nick++, nick--)
+livejournal=no         ; get livejournal entries (random or by nick)
+lyrics=no              ; look up song lyrics (spammy!)
+memebot=no             ; track urls and lay smackdown on old memes
+roll=no                ; roll ad&d dice
+slut=no                ; how slutty is the phrase? (safesearch vs. regular)
+stupid=no              ; random quote from stupid-project
+traffic=no             ; real-time traffic data (n. california only)
+war=no                 ; current war status
+webtender=no           ; how to make drinks!
+woot=no                ; latest woot offer
+yourmom=no             ; yourmom ascii art :D
+
+; admin module
+[admin]
+enabled=yes
+allowRegistration=yes
+;
+; default flags for new users
+;
+; a = admin
+; r = registered
+; o = auto-op (irc only)
+;
+defaultFlags=r
+
+; connection settings for IRC plugin. should be fairly obvious
+; channels is a comma-delimited list of channels to join
+[irc]
+host=localhost
+port=6667
+nick=madcow
+channels=#madcow
+reconnect=yes
+reconnectWait=3
+rejoin=yes
+rejoinWait=3
+rejoinReply=hi
+quitMessage=bye
+oper=no
+operUser=
+operPass=
+nickServUser=NickServ
+nickServPass=
+; if you don't want wrapping, set this very high. the rfc has
+; a limitation and your bot WILL get dropped for sending raw
+; messages that exceed it. 400 is a good number if you are
+; against wrapping
+wrapSize=400
+
+
+; settings for AIM plugin. you need to register a screenname 
+; with AOL beforehand and plug it in here.  see aim.com
+[aim]
+username=
+password=
+profile=
+
+; settings for SILC plugin. channels are a comma-delimited list
+[silcplugin]
+nick=madcow
+channels=#madcow
+host=localhost
+port=706
+reconnect=yes
+reconnectWait=3
+
+; smtp settings for summon module
+[smtp]
+server=localhost
+sender=madcow@example.com
+user=
+password=
+
+; service for email gateway (sms, etc)
+[gateway]
+enabled=yes
+bind=localhost
+port=5000
+channel=#madcow
+
+; twitter settings
+[twitter]
+enabled=no
+channel=#madcow
+updatefreq=60
+username=twitterbotaccount
+password=twitterbotpassword
+
+; database config (mysql and sqlite supported)
+; NOTE: if you use the web frontend, i recommend mysql, as sqlite has
+; serious concurrency issues
+[memebot]
+db_engine=sqlite
+; fill the following out if you use mysql.
+db_name=
+db_user=
+db_pass=
+db_host=
+db_port=
+
+; set this up to post urls to delicious
+[delicious]
+username=
+password=
+
+; IRC ONLY, will give +o to users with oper flag
+[ircops]
+enabled=no
+updatefreq=30
+
