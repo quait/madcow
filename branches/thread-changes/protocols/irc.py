@@ -35,14 +35,16 @@ class IRCProtocol(Madcow):
         self.server.connect(self.config.irc.host, self.config.irc.port,
                 self.config.irc.nick)
 
-    def _stop(self):
+    def stop(self):
+        Madcow.stop(self)
         log.info('[IRC] * Quitting IRC')
         message = self.config.irc.quitMessage
         if message is None:
             message = 'no reason'
         self.server.disconnect(message)
 
-    def _start(self):
+    def start(self):
+        Madcow.start(self)
         self.connect()
         for event in self.events:
             log.info('[IRC] * Registering event: %s' % event)
@@ -145,7 +147,7 @@ class IRCProtocol(Madcow):
             req.sendTo = req.channel
 
         self.preProcess(req)
-        self.processMessage(req)
+        self.process_message(req)
 
     def preProcess(self, req):
         req.message = self.colorlib.strip_color(req.message)

@@ -56,16 +56,16 @@ class ConsoleProtocol(Madcow):
                     req.colorize = True
                     req.message = req.message[1:]
 
-                self._processMessage(req)
+                self._process_message(req)
 
-    def _processMessage(self, req):
+    def _process_message(self, req):
         try:
             self.user_nick = self.change_nick.search(req.message).group(1)
             self.output('nick changed to: %s' % self.user_nick, req)
             return
         except:
             pass
-        self.processMessage(req)
+        self.process_message(req)
 
     def _output(self, message, req=None):
         if req is None:

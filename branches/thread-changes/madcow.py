@@ -15,7 +15,9 @@ import SocketServer
 import select
 from signal import signal, SIGHUP, SIGTERM
 import shutil
-from include.thread import lock, launch_thread, stop_threads
+from threading import Thread, RLock
+from Queue import Queue
+from types import ListType
 
 # STATIC GLOBALS
 __version__ = '1.2.1'
@@ -363,8 +365,9 @@ class PeriodicEvents(Base):
             if (now - self.last_run[mod_name]) < obj.frequency:
                 continue
             self.last_run[mod_name] = now
-            launch_thread(target=self.process_thread, name='PeriodicEvent',
-                    kwargs={'mod_name': mod_name, 'obj': obj})
+            kwargs = {'mod_name': mod_name, 'obj': obj}
+            # XXX should we use a queue here?
+            launch_thread(self.process_thread, 'PeriodicEvent', kwargs=kwargs)
 
     def process_thread(self, **kwargs):
         """Handles a periodic event"""
@@ -497,17 +500,19 @@ class Madcow(Base):
         self.config = config
         self.dir = dir
         self.cached_nick = None
-
         self.ns = self.config.modules.dbnamespace
+        self.running = False
 
+        # parse ignore list
         if self.config.main.ignorelist is not None:
-            self.ignoreList = self.config.main.ignorelist
-            self.ignoreList = self.reDelim.split(self.ignoreList)
-            self.ignoreList = [nick.lower() for nick in self.ignoreList]
-            log.info('Ignoring nicks: %s' % ', '.join(self.ignoreList))
+            self.ignore_list = self.config.main.ignorelist
+            self.ignore_list = self.reDelim.split(self.ignore_list)
+            self.ignore_list = [nick.lower() for nick in self.ignore_list]
+            log.info('Ignoring nicks: %s' % ', '.join(self.ignore_list))
         else:
-            self.ignoreList = []
+            self.ignore_list = []
 
+        # create admin instance
         self.admin = Admin(self)
 
         # set encoding
@@ -525,7 +530,10 @@ class Madcow(Base):
         signal(SIGHUP, self.signal_handler)
         signal(SIGTERM, self.signal_handler)
 
-        self.running = False
+        # initialize threads
+        self.module_queue = Queue()
+        self.response_queue = Queue()
+        self.lock = RLock()
 
     def reload_modules(self):
         """Reload all modules"""
@@ -553,32 +561,34 @@ class Madcow(Base):
 
         # start local service for handling email gateway
         if self.config.gateway.enabled:
-            log.info('launching gateway service')
             launch_thread(self.startGatewayService, 'GatewayService')
 
         # start thread to handle periodic events
-        log.info('launching periodic service')
         launch_thread(self.startPeriodicService, 'PeriodicService')
-        self._start()
 
-    def _start(self):
-        pass
+        # launch worker threads for module processing
+        for i in range(0, self.config.main.workers):
+            name = 'ModuleWorker%s' % (i + 1)
+            launch_thread(self.process_module_queue, name)
+
+    def process_module_queue(self):
+        while True:
+            try:
+                request = self.module_queue.get()
+            except Exception, e:
+                log.exception(e)
+                continue
+            self.process_module_item(request)
+            self.module_queue.task_done()
 
     def stop(self):
         """Stop the bot"""
 
-        # signal loops in threads that they should exit
+        # signal loops in threads that they should exit XXX necessary?
         self.running = False
 
-        # protocol specific shutdown procedure (quit irc, etc)
-        self._stop()
-
-        # stop all threads
-        stop_threads()
-
-    def _stop(self):
-        """Protocol-specific shutdown procedure"""
-        pass
+        # stop all threads XXX probably won't need to do this anymore
+        #stop_threads()
 
     def encode(self, text):
         """Force output to the bots encoding"""
@@ -598,23 +608,20 @@ class Madcow(Base):
             text = text.encode('ascii', 'replace')
         return text
 
-    def output(self, *args, **kwargs):
+    def output(self, message, req):
         try:
-            if not isinstance(args, list):
-                args = list(args)
-            args[0] = self.encode(args[0])
-            lock.acquire()
-            self._output(*args, **kwargs)
+            message = self.encode(message)
+            self.lock.acquire()
+            self._output(message, req) # XXX meh? :/
         except Exception, e:
-            log.error('CRITICAL ERROR IN OUTPUT: %s' % repr(args[0]))
+            log.error('error in output: %s' % repr(message))
             log.exception(e)
-
         try:
-            lock.release()
+            self.lock.release()
         except:
             pass
 
-    def _output(self, message, req=None):
+    def _output(self, message, req):
         pass
 
     def botName(self):
@@ -679,71 +686,64 @@ class Madcow(Base):
         """Returns help data as a string"""
         return '\n'.join(sorted(self.usageLines))
 
-    def processMessage(self, req):
+    def process_message(self, req):
+        """Process requests"""
         if 'NOBOT' in req.message:
             return
-
-        """Process requests"""
         if self.config.main.logpublic and not req.private:
             self.logpublic(req)
-
-        if req.nick.lower() in self.ignoreList:
+        if req.nick.lower() in self.ignore_list:
             log.info('Ignored "%s" from %s' % (req.message, req.nick))
             return
-
-        if req.feedback is True:
+        if req.feedback:
             self.output('yes?', req)
             return
-
-        if req.addressed is True and req.message.lower() == 'help':
+        if req.addressed and req.message.lower() == 'help':
             self.output(self.usage(), req)
             return
-
-        # pass through admin
-        if req.private is True:
+        if req.private:
             response = self.admin.parse(req)
             if response is not None and len(response):
                 self.output(response, req)
                 return
-
         if self.config.main.module == 'cli' and req.message == 'reload':
             self.reload_modules()
-
-        for mod_name, mod in self.modules.by_priority():
+        for mod_name, obj in self.modules.by_priority():
             log.debug('trying: %s' % mod_name)
 
-            if mod.require_addressing and not req.addressed:
+            if obj.require_addressing and not req.addressed:
                 continue
 
             try:
-                args = mod.pattern.search(req.message).groups()
+                args = obj.pattern.search(req.message).groups()
             except:
                 continue
 
             req.matched = True # module can set this to false to avoid term
 
-            # make new dict explictly for thread safety. XXX hack
-            kwargs = dict(req.__dict__.items() + [('args', args),
-                ('module', mod), ('req', req)])
+            # see if we can filter some of this information..
+            kwargs = {'req': req}
+            kwargs.update(req.__dict__)
+            request = (obj, req.nick, args, kwargs,)
 
-            if self.config.main.module == 'cli' or not mod.allow_threading:
+            if self.config.main.module == 'cli' or not obj.allow_threading:
                 log.debug('running non-threaded code for module %s' % mod_name)
-                self.processThread(**kwargs)
+                self.process_module_item(request)
             else:
                 log.debug('launching thread for module: %s' % mod_name)
-                launch_thread(self.processThread, mod_name, kwargs=kwargs)
+                self.module_queue.put(request)
 
-            if mod.terminate and req.matched:
+            if obj.terminate and req.matched:
                 log.debug('terminating because %s matched' % mod_name)
                 break
 
-    def processThread(self, **kwargs):
+    def process_module_item(self, request):
+        obj, nick, args, kwargs = request
         try:
-            response = kwargs['module'].response(**kwargs)
+            response = obj.response(nick, args, kwargs)
         except Exception, e:
-            log.warn('UNCAUGHT EXCEPTION')
+            log.warn('Uncaught module exception')
             log.exception(e)
-            response = str(e)
         if response is not None and len(response) > 0:
             self.output(response, kwargs['req'])
 
@@ -793,6 +793,12 @@ class Config(Base):
         else:
             return self.sections['DEFAULT']
 
+def launch_thread(target, name, args=(), kwargs=None):
+    log.info('launching daemon thread: %s' % name)
+    thread = Thread(target=target, name=name, args=args, kwargs=kwargs)
+    thread.setDaemon(True)
+    thread.start()
+    return thread
 
 def detach():
     """Daemonize on POSIX system"""

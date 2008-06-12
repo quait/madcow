@@ -60,7 +60,7 @@ class OSCARConnection(oscar.BOSConnection):
         handler = self._ProtocolHandler
         log.info('[AIM] <%s> %s' % (req.nick, req.message))
         handler.checkAddressing(req)
-        handler.processMessage(req)
+        handler.process_message(req)
 
 
 class OSCARAuth(oscar.OscarAuthenticator):

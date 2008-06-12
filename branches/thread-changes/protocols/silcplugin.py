@@ -49,7 +49,7 @@ class ProtocolHandler(madcow.Madcow, silc.SilcClient):
 
     self.preProcess(req)
     req.addressed = True # privmsg implies addressing
-    self.processMessage(req)
+    self.process_message(req)
 
   def channel_message(self, sender, channel, flags, message):
     req = madcow.Request(message=message)
@@ -59,7 +59,7 @@ class ProtocolHandler(madcow.Madcow, silc.SilcClient):
     req.private = False
 
     self.preProcess(req)
-    self.processMessage(req)
+    self.process_message(req)
 
   def preProcess(self, req):
     self.checkAddressing(req)

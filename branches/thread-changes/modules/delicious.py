@@ -58,7 +58,7 @@ class Main(Module):
             return
         self.delicious = Delicious(username, password)
 
-    def response(self, nick, args, **kwargs):
+    def response(self, nick, args, kwargs):
         try:
             for url in self.url.findall(args[0]):
                 self.delicious.post(url, tags=['madcow', nick])

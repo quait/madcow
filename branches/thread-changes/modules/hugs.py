@@ -17,7 +17,7 @@ class Main(Module):
     baseurl = 'http://beta.grouphug.us/'
     random = urljoin(baseurl, '/random')
 
-    def response(self, nick, args, **kwargs):
+    def response(self, nick, args, kwargs):
         try:
             doc = geturl(self.random)
             soup = BeautifulSoup(doc)
@@ -29,6 +29,7 @@ class Main(Module):
             conf = conf.strip()
             return conf
         except Exception, e:
+            print '??? %s' % e
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return '%s: I had some issues with that..' % nick
