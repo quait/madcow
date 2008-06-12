@@ -655,6 +655,7 @@ class PeriodicEvents(Base):
 
 
 class Modules(Base):
+    """This class dynamically loads plugins and instantiates them"""
     _entry = 'Main'
     _pyext = re.compile(r'\.py$')
     _ignore_mods = ('__init__', 'template')
@@ -761,6 +762,7 @@ class Modules(Base):
 
 
 class Config(Base):
+    """Config class that allows dot-notation namespace addressing"""
 
     class ConfigSection(Base):
         _isint = re.compile(r'^-?[0-9]+$')
@@ -805,7 +807,9 @@ class Config(Base):
         else:
             return self.sections['DEFAULT']
 
+
 def launch_thread(target, name, args=(), kwargs=None):
+    """Launch a daemon thread"""
     log.info('launching daemon thread: %s' % name)
     thread = Thread(target=target, name=name, args=args, kwargs=kwargs)
     thread.setDaemon(True)
