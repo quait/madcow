@@ -43,29 +43,32 @@ class ProtocolHandler(madcow.Madcow, silc.SilcClient):
       time.sleep(0.2)
 
   def private_message(self, sender, flags, message):
-    req = madcow.Request(message=message)
-    req.nick = sender.nickname
-    req.channel = None
-    req.sendTo = sender
-    req.private = True
-
-    self.preProcess(req)
-    req.addressed = True # privmsg implies addressing
-    self.process_message(req)
+    self.on_message(sender, None, flags, message, True)
 
   def channel_message(self, sender, channel, flags, message):
+    self.on_message(sender, channel, flags, message, False)
+
+  def on_message(self, sender, channel, flags, message, private):
     req = madcow.Request(message=message)
     req.nick = sender.nickname
-    req.channel = channel.channel_name
-    req.sendTo = channel
-    req.private = False
+    req.private = private
+    if private:
+      req.addressed = True
+      req.sendTo = sender
+    else:
+      req.channel = channel.channel_name
+      req.sendTo = channel
+
+    req.message = self.colorlib.strip_color(req.message)
     self.checkAddressing(req)
+
     if req.message.startswith('^'):
       req.message = req.message[1:]
       req.colorize = True
     else:
       req.colorize = False
     self.process_message(req)
+
 
   # not much of a point recovering from a kick when the silc code just segfaults on you :/
   #def notify_kicked(self, kicked, reason, kicker, channel):
