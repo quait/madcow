@@ -21,7 +21,7 @@ class ConsoleProtocol(Madcow):
         self.colorlib = ColorLib('ansi')
         Madcow.__init__(self, config=config, dir=dir)
         self.user_nick = os.environ['USER']
-        self.shell = Shell()
+        self.shell = Shell(polls=[self.check_response_queue])
         self.usageLines += self._cli_usage
 
     def start(self):
