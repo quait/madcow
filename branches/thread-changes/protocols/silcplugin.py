@@ -13,14 +13,12 @@ import logging as log
 
 class ProtocolHandler(madcow.Madcow, silc.SilcClient):
   def __init__(self, config=None, dir=None):
-    madcow.Madcow.__init__(self, config=config, dir=dir)
+    madcow.Madcow.__init__(self, config, dir)
     self.colorlib = ColorLib('mirc')
-
     keys = silc.create_key_pair("silc.pub", "silc.priv", passphrase="")
     nick = self.config.silcplugin.nick
     silc.SilcClient.__init__(self, keys, nick, nick, nick)
-
-    self.channels = re.split('\s*[,;]\s*', self.config.silcplugin.channels)
+    self.channels = self._delim.split(self.config.silcplugin.channels)
 
   def botName(self):
     return self.config.silcplugin.nick
@@ -69,7 +67,6 @@ class ProtocolHandler(madcow.Madcow, silc.SilcClient):
       req.colorize = False
     self.process_message(req)
 
-
   # not much of a point recovering from a kick when the silc code just segfaults on you :/
   #def notify_kicked(self, kicked, reason, kicker, channel):
   #  print 'SILC: Notify (Kick):', kicked, reason, kicker, channel
@@ -88,7 +85,8 @@ class ProtocolHandler(madcow.Madcow, silc.SilcClient):
   def protocol_output(self, message, req=None):
     if not message: return
 
-    message = message.decode("ascii", "ignore") # remove unprintables
+    # XXX is this necessary now that main bot encodes to latin1/utf8?
+    #message = message.decode("ascii", "ignore") # remove unprintables
 
     if req.colorize:
       message = self.colorlib.rainbow(message)
@@ -97,6 +95,8 @@ class ProtocolHandler(madcow.Madcow, silc.SilcClient):
       self.send_to_user(req.sendTo, message)
     else:
       self.send_to_channel(req.sendTo, message)
+
+  # XXX should these use irc's textwrap?
 
   def send_to_channel(self, channel, message):
     for line in message.splitlines():
