@@ -364,23 +364,10 @@ class PeriodicEvents(Base):
             if (now - self.last_run[mod_name]) < obj.frequency:
                 continue
             self.last_run[mod_name] = now
-            kwargs = {'mod_name': mod_name, 'obj': obj}
-            # XXX should we use a queue here?
-            launch_thread(self.process_thread, 'PeriodicEvent', kwargs=kwargs)
-
-    def process_thread(self, **kwargs):
-        """Handles a periodic event"""
-        try:
-            obj = kwargs['obj']
-            response = obj.process()
-        except Exception, e:
-            log.warn('UNCAUGHT EXCEPTION IN %s' % kwargs['mod_name'])
-            log.exception(e)
-        if response is not None and len(response):
             req = Request()
-            req.colorize = False
             req.sendTo = obj.output
-            self.madcow.output(response, req)
+            request = (obj, None, None, {'req': req})
+            self.madcow.module_queue.put(request)
 
 
 class Modules(Base):
@@ -579,7 +566,7 @@ class Madcow(Base):
             log.exception(e)
             return
 
-        # process output
+        # encode output, lock threads, and call protocol_output
         try:
             self.lock.acquire()
             response = self.encode(response)
@@ -753,6 +740,7 @@ class Madcow(Base):
         except Exception, e:
             log.warn('Uncaught module exception')
             log.exception(e)
+
         if response is not None and len(response) > 0:
             self.output(response, kwargs['req'])
 
