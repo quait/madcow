@@ -86,7 +86,8 @@ class ProtocolHandler(madcow.Madcow, silc.SilcClient):
     if not message: return
 
     # XXX is this necessary now that main bot encodes to latin1/utf8?
-    #message = message.decode("ascii", "ignore") # remove unprintables
+    # BB: Yup, still needed :)
+    message = message.decode("latin1", "ignore") # remove unprintables
 
     if req.colorize:
       message = self.colorlib.rainbow(message)
@@ -97,6 +98,8 @@ class ProtocolHandler(madcow.Madcow, silc.SilcClient):
       self.send_to_channel(req.sendTo, message)
 
   # XXX should these use irc's textwrap?
+  # Nah, silc doesn't have message limits like IRC, so wrapping just
+  # induces unnecessary ugliness
 
   def send_to_channel(self, channel, message):
     for line in message.splitlines():
