@@ -4,19 +4,16 @@
 
 release="madcow-1.2.1"
 
-svn copy https://madcow.svn.sourceforge.net/svnroot/madcow/trunk https://madcow.svn.sourceforge.net/svnroot/madcow/tags/$release
+svn copy https://madcow.svn.sourceforge.net/svnroot/madcow/trunk https://madcow.svn.sourceforge.net/svnroot/madcow/tags/$release || exit
 
 # export & make a bundle
 svn export https://madcow.svn.sourceforge.net/svnroot/madcow/tags/$release
-rm ${release}/release-checklist.txt
 tar cfjv ${release}.tar.bz2 $release
 
 # upload to anon ftp
-#
 rsync -vPazue ssh ${release}.tar.bz2 cj__@frs.sourceforge.net:uploads/
 
-# activate release on SF.net:
+echo "activate release at:"
 echo "http://sourceforge.net/project/admin/editpackages.php?group_id=199970"
-echo
 
 
