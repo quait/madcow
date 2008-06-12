@@ -87,7 +87,7 @@ class ProtocolHandler(madcow.Madcow, silc.SilcClient):
 
     # XXX is this necessary now that main bot encodes to latin1/utf8?
     # BB: Yup, still needed :)
-    message = message.decode("latin1", "ignore") # remove unprintables
+    message = message.decode(self.config.main.charset, "ignore") # remove unprintables
 
     if req.colorize:
       message = self.colorlib.rainbow(message)
