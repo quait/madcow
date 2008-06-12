@@ -29,7 +29,8 @@ class ProtocolHandler(madcow.Madcow, silc.SilcClient):
     log.info("connecting to %s:%s" % (self.config.silcplugin.host, self.config.silcplugin.port))
     self.connect_to_server(self.config.silcplugin.host, self.config.silcplugin.port)
 
-  def _start(self):
+  def start(self):
+    madcow.Madcow.start(self)
     self.connect()
     while self.running:
       try:

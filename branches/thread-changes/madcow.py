@@ -608,11 +608,11 @@ class Madcow(Base):
             text = text.encode('ascii', 'replace')
         return text
 
-    def output(self, message, req):
+    def output(self, message, req=None):
         try:
             message = self.encode(message)
             self.lock.acquire()
-            self._output(message, req) # XXX meh? :/
+            self._output(message, req)
         except Exception, e:
             log.error('error in output: %s' % repr(message))
             log.exception(e)

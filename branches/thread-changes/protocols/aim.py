@@ -13,7 +13,8 @@ class AIMProtocol(Madcow):
         Madcow.__init__(self, config=config, dir=dir)
         self.newline = re.compile('[\r\n]+')
 
-    def _start(self):
+    def start(self):
+        Madcow.start(self)
         log.info('[AIM] Logging into aol.com')
         server = ('login.oscar.aol.com', 5190)
         p = protocol.ClientCreator(
