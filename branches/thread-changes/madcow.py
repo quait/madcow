@@ -17,10 +17,10 @@ from signal import signal, SIGHUP, SIGTERM
 import shutil
 from threading import Thread, RLock
 from Queue import Queue, Empty
-from types import ListType
+from types import StringTypes
 
 # STATIC VARIABLES
-__version__ = '2.0.0 beta'
+__version__ = '1.3.0'
 __author__ = 'Christopher Jones <cjones@gruntle.org>'
 __copyright__ = 'Copyright (C) 2007-2008 Christopher Jones'
 __license__ = 'GPL'
@@ -151,7 +151,7 @@ class Madcow(Base):
 
     def encode(self, text):
         """Force output to the bots encoding"""
-        if isinstance(text, str):
+        if isinstance(text, StringTypes):
             for charset in self._codecs:
                 try:
                     text = unicode(text, charset)
@@ -159,7 +159,7 @@ class Madcow(Base):
                 except:
                     pass
 
-            if isinstance(text, str):
+            if isinstance(text, StringTypes):
                 text = unicode(text, 'ascii', 'replace')
         try:
             text = text.encode(self.charset)
