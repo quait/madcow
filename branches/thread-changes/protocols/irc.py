@@ -58,7 +58,7 @@ class IRCProtocol(Madcow):
             except KeyboardInterrupt:
                 self.running = False
             except Exception, e:
-                log.warn('EINTR detected in irc loop')
+                log.warn('EINTR detected in irc loop?')
                 log.exception(e)
 
     def botName(self):
@@ -101,7 +101,7 @@ class IRCProtocol(Madcow):
                 server.join(event.target())
                 server.privmsg(event.target(), self.config.irc.rejoinReply)
 
-    # function to putput to IRC
+    # function to output to IRC
     def protocol_output(self, message, req=None):
         if message is None:
             return
@@ -111,20 +111,17 @@ class IRCProtocol(Madcow):
         if len(message) == 0:
             return
 
-        if req.colorize is True:
+        if req.colorize:
             style = random.choice(self.colorlib._rainbow_map.keys())
             message = self.colorlib.rainbow(message, style=style)
-
         try:
             wrap = self.config.irc.wrapsize
         except:
             wrap = 400
-
         output = []
         for line in message.splitlines():
             for wrapped in textwrap.wrap(line, wrap):
                 output.append(wrapped)
-
         for line in output:
             self.server.privmsg(req.sendTo, line)
 
