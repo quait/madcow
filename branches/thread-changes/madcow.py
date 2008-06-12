@@ -83,6 +83,7 @@ class Madcow(Base):
         """Start the bot"""
         self.running = True
 
+        ## START WORKER THREADS
         # worker threads exit when running is set to False
 
         # start local service for handling email gateway
@@ -150,7 +151,7 @@ class Madcow(Base):
         self.response_queue.task_done()
 
     def encode(self, text):
-        """Force output to the bots encoding"""
+        """Force output to the bots encoding if possible"""
         if isinstance(text, StringTypes):
             for charset in self._codecs:
                 try:
