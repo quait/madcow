@@ -146,10 +146,6 @@ class IRCProtocol(Madcow):
         else:
             req.sendTo = req.channel
 
-        self.preProcess(req)
-        self.process_message(req)
-
-    def preProcess(self, req):
         req.message = self.colorlib.strip_color(req.message)
         self.checkAddressing(req)
 
@@ -158,6 +154,7 @@ class IRCProtocol(Madcow):
             req.colorize = True
         else:
             req.colorize = False
+        self.process_message(req)
 
     def on_namreply(self, server, event):
         log.debug('[IRC] Updating NAMES list')

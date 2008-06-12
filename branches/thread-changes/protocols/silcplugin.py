@@ -59,19 +59,14 @@ class ProtocolHandler(madcow.Madcow, silc.SilcClient):
     req.channel = channel.channel_name
     req.sendTo = channel
     req.private = False
-
-    self.preProcess(req)
-    self.process_message(req)
-
-  def preProcess(self, req):
     self.checkAddressing(req)
-
     if req.message.startswith('^'):
       req.message = req.message[1:]
       req.colorize = True
     else:
       req.colorize = False
-  
+    self.process_message(req)
+
   # not much of a point recovering from a kick when the silc code just segfaults on you :/
   #def notify_kicked(self, kicked, reason, kicker, channel):
   #  print 'SILC: Notify (Kick):', kicked, reason, kicker, channel
