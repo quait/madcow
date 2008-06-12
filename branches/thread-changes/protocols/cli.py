@@ -26,7 +26,7 @@ class ConsoleProtocol(Madcow):
 
     def start(self):
         Madcow.start(self)
-        self.response_queue.put(("type 'help' for a list of commands", None))
+        self.output("type 'help' for a list of commands")
         while self.running:
             self.check_response_queue()
             try:
@@ -60,14 +60,13 @@ class ConsoleProtocol(Madcow):
 
                 try:
                     self.user_nick = self._new_nick.search(req.message).group(1)
-                    self.response_queue.put(('nick changed to: %s' % 
-                            self.user_nick, req))
+                    self.output('nick changed to: %s' % self.user_nick, req)
                     continue
                 except:
                     pass
                 self.process_message(req)
 
-    def _output(self, message, req=None):
+    def protocol_output(self, message, req=None):
         if req is not None and req.colorize is True:
             message = self.colorlib.rainbow(message)
         print message

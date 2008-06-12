@@ -102,7 +102,7 @@ class IRCProtocol(Madcow):
                 server.privmsg(event.target(), self.config.irc.rejoinReply)
 
     # function to putput to IRC
-    def _output(self, message, req):
+    def protocol_output(self, message, req=None):
         if message is None:
             return
 

@@ -335,7 +335,7 @@ class ServiceHandler(SocketServer.BaseRequestHandler):
         req.colorize = False
         req.sendTo = send_to
         output = 'message from %s: %s' % (sent_from, message)
-        self.server.madcow.response_queue.put((output, req))
+        self.server.madcow.output(output, req)
 
     def finish(self):
         log.info('connection closed by %s' % repr(self.client_address))
@@ -381,7 +381,7 @@ class PeriodicEvents(Base):
             req = Request()
             req.colorize = False
             req.sendTo = obj.output
-            self.madcow.response_queue.put((response, req))
+            self.madcow.output(response, req)
 
 
 class Modules(Base):
@@ -579,7 +579,19 @@ class Madcow(Base):
         except Exception, e:
             log.exception(e)
             return
-        self.output(response, req)
+
+        # process output
+        try:
+            self.lock.acquire()
+            response = self.encode(response)
+            self.protocol_output(response, req)
+        except Exception, e:
+            log.error('error in output: %s' % repr(response))
+            log.exception(e)
+        try:
+            self.lock.release()
+        except:
+            pass
         self.response_queue.task_done()
 
     def process_module_queue(self):
@@ -620,20 +632,10 @@ class Madcow(Base):
         return text
 
     def output(self, message, req=None):
-        try:
-            message = self.encode(message)
-            self.lock.acquire()
-            self._output(message, req)
-        except Exception, e:
-            log.error('error in output: %s' % repr(message))
-            log.exception(e)
-        try:
-            self.lock.release()
-        except:
-            pass
+        self.response_queue.put((message, req))
 
-    def _output(self, message, req):
-        pass
+    def protocol_output(self, message, req=None):
+        print message
 
     def botName(self):
         return 'madcow'
@@ -707,15 +709,15 @@ class Madcow(Base):
             log.info('Ignored "%s" from %s' % (req.message, req.nick))
             return
         if req.feedback:
-            self.response_queue.put(('yes?', req))
+            self.output('yes?', req)
             return
         if req.addressed and req.message.lower() == 'help':
-            self.response_queue.put((self.usage(), req))
+            self.output(self.usage(), req)
             return
         if req.private:
             response = self.admin.parse(req)
             if response is not None and len(response):
-                self.response_queue.put((response, req))
+                self.output(response, req)
                 return
         if self.config.main.module == 'cli' and req.message == 'reload':
             self.reload_modules()
@@ -756,7 +758,7 @@ class Madcow(Base):
             log.warn('Uncaught module exception')
             log.exception(e)
         if response is not None and len(response) > 0:
-            self.response_queue.put((response, kwargs['req']))
+            self.output(response, kwargs['req'])
 
 
 class Config(Base):

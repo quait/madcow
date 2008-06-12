@@ -27,7 +27,7 @@ class AIMProtocol(Madcow):
         ### XXX HOW TO CHECK RESPONSE QUEUE?
         reactor.run()
 
-    def _output(self, message, req):
+    def protocol_output(self, message, req=None):
         message = self.newline.sub('<br>', message)
         req.aim.sendMessage(req.nick, message)
 

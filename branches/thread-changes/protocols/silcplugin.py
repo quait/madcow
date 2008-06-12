@@ -87,7 +87,7 @@ class ProtocolHandler(madcow.Madcow, silc.SilcClient):
       time.sleep(self.config.silcplugin.reconnectWait)
       self.connect()
 
-  def _output(self, message, req):
+  def protocol_output(self, message, req=None):
     if not message: return
 
     message = message.decode("ascii", "ignore") # remove unprintables
