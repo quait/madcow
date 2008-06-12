@@ -192,6 +192,7 @@ class Madcow(Base):
         except Exception, e:
             log.warn('Uncaught module exception')
             log.exception(e)
+            return
 
         if response is not None and len(response) > 0:
             self.output(response, kwargs['req'])
