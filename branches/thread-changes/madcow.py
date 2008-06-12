@@ -20,12 +20,11 @@ from Queue import Queue, Empty
 from types import ListType
 
 # STATIC GLOBALS
-__version__ = '1.2.1'
+__version__ = '2.0.0 beta'
 __author__ = 'Christopher Jones <cjones@gruntle.org>'
 __copyright__ = 'Copyright (C) 2007-2008 Christopher Jones'
 __license__ = 'GPL'
-__all__ = ['Request', 'User', 'Admin', 'ServiceHandler', 'PeriodicEvents',
-        'Madcow', 'Config']
+__all__ = ['Request', 'Madcow', 'Config']
 _logformat = '[%(asctime)s] %(levelname)s: %(message)s'
 _loglevel = log.WARN
 _charset = 'latin1'
@@ -609,9 +608,6 @@ class Madcow(Base):
 
         # signal loops in threads that they should exit
         self.running = False
-
-        # stop all threads XXX probably won't need to do this anymore
-        #stop_threads()
 
     def encode(self, text):
         """Force output to the bots encoding"""
