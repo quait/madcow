@@ -21,9 +21,10 @@ from types import StringTypes, StringType
 
 # STATIC VARIABLES
 __version__ = '1.3.0'
-__author__ = 'Christopher Jones <cjones@gruntle.org>'
+__author__ = 'cj_ <cjones@gruntle.org>'
 __copyright__ = 'Copyright (C) 2007-2008 Christopher Jones'
 __license__ = 'GPL'
+__url__ = 'http://madcow.sourceforge.net/'
 __all__ = ['Request', 'Madcow', 'Config']
 _logformat = '[%(asctime)s] %(levelname)s: %(message)s'
 _loglevel = log.WARN
@@ -69,6 +70,8 @@ class Madcow(Base):
         self.modules = Modules(self, 'modules', dir=self.dir)
         self.periodics = Modules(self, 'periodic', dir=self.dir)
         self.usageLines = self.modules.help + self.periodics.help
+        self.usageLines.append('help - this screen')
+        self.usageLines.append('version - get bot version')
 
         # signal handlers
         signal(SIGHUP, self.signal_handler)
@@ -254,7 +257,8 @@ class Madcow(Base):
             self.output(self.usage(), req)
             return
         if req.addressed and req.message.lower() == 'version':
-            self.output(__version__, req)
+            res = 'madcow %s by %s: %s' % (__version__, __author__, __url__)
+            self.output(res, req)
             return
         if req.private:
             response = self.admin.parse(req)
