@@ -33,6 +33,7 @@ class ProtocolHandler(madcow.Madcow, silc.SilcClient):
     madcow.Madcow.start(self)
     self.connect()
     while self.running:
+      self.check_response_queue()
       try:
         self.run_one()
       except KeyboardInterrupt:

@@ -24,6 +24,7 @@ class AIMProtocol(Madcow):
         log.info('[AIM] Connected')
 
         p.protocolClass.BOSClass._ProtocolHandler = self
+        ### XXX HOW TO CHECK RESPONSE QUEUE?
         reactor.run()
 
     def _output(self, message, req):
