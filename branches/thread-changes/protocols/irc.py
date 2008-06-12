@@ -53,7 +53,8 @@ class IRCProtocol(Madcow):
 
         while self.running:
             try:
-                self.irc.process_once(0.2)
+                self.irc.process_once(0.1)
+                self.check_response_queue()
             except KeyboardInterrupt:
                 self.running = False
             except Exception, e:
@@ -85,7 +86,6 @@ class IRCProtocol(Madcow):
     # when losing connection, reconnect if configured to do so, otherwise exit
     def on_disconnect(self, server, event):
         log.warn('[IRC] * Disconnected from server')
-
         if self.config.irc.reconnect and self.running:
             time.sleep(self.config.irc.reconnectWait)
             self.connect()
@@ -179,5 +179,4 @@ class IRCProtocol(Madcow):
 
 class ProtocolHandler(IRCProtocol):
     pass
-
 

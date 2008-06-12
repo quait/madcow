@@ -16,7 +16,7 @@ import select
 from signal import signal, SIGHUP, SIGTERM
 import shutil
 from threading import Thread, RLock
-from Queue import Queue
+from Queue import Queue, Empty
 from types import ListType
 
 # STATIC GLOBALS
@@ -335,7 +335,7 @@ class ServiceHandler(SocketServer.BaseRequestHandler):
         req.colorize = False
         req.sendTo = send_to
         output = 'message from %s: %s' % (sent_from, message)
-        self.server.madcow.output(output, req)
+        self.server.madcow.response_queue.put((output, req))
 
     def finish(self):
         log.info('connection closed by %s' % repr(self.client_address))
@@ -381,7 +381,7 @@ class PeriodicEvents(Base):
             req = Request()
             req.colorize = False
             req.sendTo = obj.output
-            self.madcow.output(response, req)
+            self.madcow.response_queue.put((response, req))
 
 
 class Modules(Base):
@@ -571,6 +571,17 @@ class Madcow(Base):
             name = 'ModuleWorker%s' % (i + 1)
             launch_thread(self.process_module_queue, name)
 
+    def check_response_queue(self):
+        try:
+            response, req = self.response_queue.get_nowait()
+        except Empty:
+            return
+        except Exception, e:
+            log.exception(e)
+            return
+        self.output(response, req)
+        self.response_queue.task_done()
+
     def process_module_queue(self):
         while True:
             try:
@@ -584,7 +595,7 @@ class Madcow(Base):
     def stop(self):
         """Stop the bot"""
 
-        # signal loops in threads that they should exit XXX necessary?
+        # signal loops in threads that they should exit
         self.running = False
 
         # stop all threads XXX probably won't need to do this anymore
@@ -696,15 +707,15 @@ class Madcow(Base):
             log.info('Ignored "%s" from %s' % (req.message, req.nick))
             return
         if req.feedback:
-            self.output('yes?', req)
+            self.response_queue.put(('yes?', req))
             return
         if req.addressed and req.message.lower() == 'help':
-            self.output(self.usage(), req)
+            self.response_queue.put((self.usage(), req))
             return
         if req.private:
             response = self.admin.parse(req)
             if response is not None and len(response):
-                self.output(response, req)
+                self.response_queue.put((response, req))
                 return
         if self.config.main.module == 'cli' and req.message == 'reload':
             self.reload_modules()
@@ -745,7 +756,7 @@ class Madcow(Base):
             log.warn('Uncaught module exception')
             log.exception(e)
         if response is not None and len(response) > 0:
-            self.output(response, kwargs['req'])
+            self.response_queue.put((response, kwargs['req']))
 
 
 class Config(Base):
