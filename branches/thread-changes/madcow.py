@@ -17,7 +17,7 @@ from signal import signal, SIGHUP, SIGTERM
 import shutil
 from threading import Thread, RLock
 from Queue import Queue, Empty
-from types import StringTypes
+from types import StringTypes, StringType
 
 # STATIC VARIABLES
 __version__ = '1.3.0'
@@ -159,7 +159,7 @@ class Madcow(Base):
                 except:
                     pass
 
-            if isinstance(text, StringTypes):
+            if isinstance(text, StringType):
                 text = unicode(text, 'ascii', 'replace')
         try:
             text = text.encode(self.charset)
