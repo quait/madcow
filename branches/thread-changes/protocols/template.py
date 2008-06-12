@@ -58,8 +58,8 @@ class ProtocolHandler(Madcow):
         # required for most modules
         req.nick = nick
 
-        # some modules expect this to be set
-        req.channel = 'channelname'
+        # some modules expect this to be set as well as logging facility
+        req.channel = 'console'
 
         # force bot into addressed mode
         # many modules require the bot is addressed before triggering.
