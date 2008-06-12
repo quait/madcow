@@ -23,7 +23,7 @@ class IRCProtocol(Madcow):
         self.events = ['welcome', 'disconnect', 'kick', 'privmsg', 'pubmsg',
                 'namreply']
         if self.config.irc.channels is not None:
-            self.channels = self.reDelim.split(self.config.irc.channels)
+            self.channels = self._delim.split(self.config.irc.channels)
         else:
             self.channels = []
         self.names = {}

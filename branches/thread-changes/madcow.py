@@ -19,7 +19,7 @@ from threading import Thread, RLock
 from Queue import Queue, Empty
 from types import ListType
 
-# STATIC GLOBALS
+# STATIC VARIABLES
 __version__ = '2.0.0 beta'
 __author__ = 'Christopher Jones <cjones@gruntle.org>'
 __copyright__ = 'Copyright (C) 2007-2008 Christopher Jones'
@@ -30,6 +30,289 @@ _loglevel = log.WARN
 _charset = 'latin1'
 _config = 'madcow.ini'
 _config_warning = 'created config %s - you should edit this and rerun'
+
+class Madcow(Base):
+    """Core bot handler, subclassed by protocols"""
+
+    _delim = re.compile(r'\s*[,;]\s*')
+    _codecs = ('ascii', 'utf8', 'latin1')
+
+    ### INITIALIZATION FUNCTIONS ###
+
+    def __init__(self, config=None, dir=None):
+        """Initialize bot"""
+        self.config = config
+        self.dir = dir
+        self.cached_nick = None
+        self.ns = self.config.modules.dbnamespace
+        self.running = False
+
+        # parse ignore list
+        if self.config.main.ignorelist is not None:
+            self.ignore_list = self.config.main.ignorelist
+            self.ignore_list = self._delim.split(self.ignore_list)
+            self.ignore_list = [nick.lower() for nick in self.ignore_list]
+            log.info('Ignoring nicks: %s' % ', '.join(self.ignore_list))
+        else:
+            self.ignore_list = []
+
+        # create admin instance
+        self.admin = Admin(self)
+
+        # set encoding
+        if self.config.main.charset:
+            self.charset = self.config.main.charset
+        else:
+            self.charset = _charset
+
+        # load modules
+        self.modules = Modules(self, 'modules', dir=self.dir)
+        self.periodics = Modules(self, 'periodic', dir=self.dir)
+        self.usageLines = self.modules.help + self.periodics.help
+
+        # signal handlers
+        signal(SIGHUP, self.signal_handler)
+        signal(SIGTERM, self.signal_handler)
+
+        # initialize threads
+        self.module_queue = Queue()
+        self.response_queue = Queue()
+        self.lock = RLock()
+
+    def start(self):
+        """Start the bot"""
+        self.running = True
+
+        # worker threads exit when running is set to False
+
+        # start local service for handling email gateway
+        if self.config.gateway.enabled:
+            launch_thread(self.start_gateway_service, 'GatewayService')
+
+        # start thread to handle periodic events
+        launch_thread(self.start_periodic_service, 'PeriodicService')
+
+        # launch worker threads for module processing
+        for i in range(0, self.config.main.workers):
+            name = 'ModuleWorker%s' % (i + 1)
+            launch_thread(self.module_queue_dispatcher, name)
+
+    def start_gateway_service(self):
+        """Begin gateway service"""
+        GatewayService(madcow=self).start()
+
+    def start_periodic_service(self):
+        """Begin periodic service"""
+        PeriodicEvents(madcow=self).start()
+
+    def signal_handler(self, sig, frame):
+        """Handles signals"""
+        if sig == SIGTERM:
+            log.warn('got SIGTERM, signaling shutting down')
+            self.running = False
+        elif sig == SIGHUP:
+            self.reload_modules()
+
+    def reload_modules(self):
+        """Reload all modules"""
+        log.info('reloading modules')
+        self.modules.load_modules()
+        self.periodics.load_modules()
+
+    ### OUTPUT FUNCTIONS
+
+    def output(self, message, req=None):
+        """Add response to output queue"""
+        self.response_queue.put((message, req))
+
+    def check_response_queue(self):
+        """Check if there's any message in response queue and process"""
+        try:
+            response, req = self.response_queue.get_nowait()
+        except Empty:
+            return
+        except Exception, e:
+            log.exception(e)
+            return
+
+        # encode output, lock threads, and call protocol_output
+        try:
+            self.lock.acquire()
+            response = self.encode(response)
+            self.protocol_output(response, req)
+        except Exception, e:
+            log.error('error in output: %s' % repr(response))
+            log.exception(e)
+        try:
+            self.lock.release()
+        except:
+            pass
+        self.response_queue.task_done()
+
+    def encode(self, text):
+        """Force output to the bots encoding"""
+        if isinstance(text, str):
+            for charset in self._codecs:
+                try:
+                    text = unicode(text, charset)
+                    break
+                except:
+                    pass
+
+            if isinstance(text, str):
+                text = unicode(text, 'ascii', 'replace')
+        try:
+            text = text.encode(self.charset)
+        except:
+            text = text.encode('ascii', 'replace')
+        return text
+
+    def protocol_output(self, message, req=None):
+        """Override with protocol-specific output method"""
+        print message
+
+    ### MODULE PROCESSING ###
+
+    def module_queue_dispatcher(self):
+        """Dispatcher for workers"""
+        while self.running:
+            try:
+                request = self.module_queue.get()
+            except Exception, e:
+                log.exception(e)
+                continue
+            self.process_module_item(request)
+            self.module_queue.task_done()
+
+    def process_module_item(self, request):
+        """Run module response method and output any response"""
+        obj, nick, args, kwargs = request
+        try:
+            response = obj.response(nick, args, kwargs)
+        except Exception, e:
+            log.warn('Uncaught module exception')
+            log.exception(e)
+
+        if response is not None and len(response) > 0:
+            self.output(response, kwargs['req'])
+
+    ### INPUT FROM USER ###
+
+    def checkAddressing(self, req):
+        """Is bot being addressed?"""
+        nick = re.escape(self.botName())
+
+        # recompile nick-based regex if it changes
+        if nick != self.cached_nick:
+            self.cached_nick = nick
+            self.re_cor = re.compile(r'^\s*no[ ,]+%s[ ,:-]+\s*(.+)$' % nick,
+                    re.I)
+            self.re_cor_addr = re.compile(r'^\s*no[ ,]+(.+)$', re.I)
+            self.re_feedback = re.compile(r'^\s*%s[ !]*\?[ !]*$' % nick, re.I)
+            self.re_addr_end = re.compile(r'^(.+),\s+%s\W*$' % nick, re.I)
+            self.re_addr_pre = re.compile(r'^\s*%s[-,: ]+(.+)$' % nick,
+                    re.I)
+        if self.re_feedback.search(req.message):
+            req.feedback = req.addressed = True
+        try:
+            req.message = self.re_addr_end.search(req.message).group(1)
+            req.addressed = True
+        except:
+            pass
+        try:
+            req.message = self.re_addr_pre.search(req.message).group(1)
+            req.addressed = True
+        except:
+            pass
+        try:
+            req.message = self.re_cor.search(req.message).group(1)
+            req.correction = req.addressed = True
+        except:
+            pass
+        if req.addressed:
+            try:
+                req.message = self.re.cor_addr.search(req.message).group(1)
+                req.correction = True
+            except:
+                pass
+
+    def process_message(self, req):
+        """Process requests"""
+        if 'NOBOT' in req.message:
+            return
+        if self.config.main.logpublic and not req.private:
+            self.logpublic(req)
+        if req.nick.lower() in self.ignore_list:
+            log.info('Ignored "%s" from %s' % (req.message, req.nick))
+            return
+        if req.feedback:
+            self.output('yes?', req)
+            return
+        if req.addressed and req.message.lower() == 'help':
+            self.output(self.usage(), req)
+            return
+        if req.private:
+            response = self.admin.parse(req)
+            if response is not None and len(response):
+                self.output(response, req)
+                return
+        if self.config.main.module == 'cli' and req.message == 'reload':
+            self.reload_modules()
+        for mod_name, obj in self.modules.by_priority():
+            log.debug('trying: %s' % mod_name)
+
+            if obj.require_addressing and not req.addressed:
+                continue
+
+            try:
+                args = obj.pattern.search(req.message).groups()
+            except:
+                continue
+
+            req.matched = True # module can set this to false to avoid term
+
+            # see if we can filter some of this information..
+            kwargs = {'req': req}
+            kwargs.update(req.__dict__)
+            request = (obj, req.nick, args, kwargs,)
+
+            if self.config.main.module == 'cli' or not obj.allow_threading:
+                log.debug('running non-threaded code for module %s' % mod_name)
+                self.process_module_item(request)
+            else:
+                log.debug('launching thread for module: %s' % mod_name)
+                self.module_queue.put(request)
+
+            if obj.terminate and req.matched:
+                log.debug('terminating because %s matched' % mod_name)
+                break
+
+    def logpublic(self, req):
+        """Logs public chatter"""
+        line = '%s <%s> %s\n' % (time.strftime('%T'), req.nick, req.message)
+        path = os.path.join(self.dir, 'logs', '%s-irc-%s-%s' % (self.ns,
+            req.channel, time.strftime('%F')))
+
+        fo = open(path, 'a')
+        try:
+            fo.write(line)
+        finally:
+            fo.close()
+
+    ### MISC FUNCTIONS ###
+
+    def usage(self):
+        """Returns help data as a string"""
+        return '\n'.join(sorted(self.usageLines))
+
+    def stop(self):
+        """Stop the bot"""
+        self.running = False
+
+    def botName(self):
+        """Should return the real name of the bot"""
+        return 'madcow'
+
 
 class FileNotFound(Error):
     """Raised when a file is not found"""
@@ -474,275 +757,6 @@ class Modules(Base):
 
     def __iter__(self):
         return self.dict().iteritems()
-
-
-class Madcow(Base):
-    """Core bot handler"""
-    reDelim = re.compile(r'\s*[,;]\s*')
-    _codecs = ('ascii', 'utf8', 'latin1',)
-
-    def __init__(self, config=None, dir=None):
-        """Initialize bot"""
-        self.config = config
-        self.dir = dir
-        self.cached_nick = None
-        self.ns = self.config.modules.dbnamespace
-        self.running = False
-
-        # parse ignore list
-        if self.config.main.ignorelist is not None:
-            self.ignore_list = self.config.main.ignorelist
-            self.ignore_list = self.reDelim.split(self.ignore_list)
-            self.ignore_list = [nick.lower() for nick in self.ignore_list]
-            log.info('Ignoring nicks: %s' % ', '.join(self.ignore_list))
-        else:
-            self.ignore_list = []
-
-        # create admin instance
-        self.admin = Admin(self)
-
-        # set encoding
-        if self.config.main.charset:
-            self.charset = self.config.main.charset
-        else:
-            self.charset = _charset
-
-        # load modules
-        self.modules = Modules(self, 'modules', dir=self.dir)
-        self.periodics = Modules(self, 'periodic', dir=self.dir)
-        self.usageLines = self.modules.help + self.periodics.help
-
-        # signal handlers
-        signal(SIGHUP, self.signal_handler)
-        signal(SIGTERM, self.signal_handler)
-
-        # initialize threads
-        self.module_queue = Queue()
-        self.response_queue = Queue()
-        self.lock = RLock()
-
-    def reload_modules(self):
-        """Reload all modules"""
-        log.info('reloading modules')
-        self.modules.load_modules()
-        self.periodics.load_modules()
-
-    def signal_handler(self, sig, frame):
-        """Handles signals"""
-        if sig == SIGTERM:
-            log.warn('got SIGTERM, signaling shutting down')
-            self.running = False
-        elif sig == SIGHUP:
-            self.reload_modules()
-
-    def startGatewayService(self):
-        GatewayService(madcow=self).start()
-
-    def startPeriodicService(self, *args, **kwargs):
-        PeriodicEvents(madcow=self).start()
-
-    def start(self):
-        """Start the bot"""
-        self.running = True
-
-        # start local service for handling email gateway
-        if self.config.gateway.enabled:
-            launch_thread(self.startGatewayService, 'GatewayService')
-
-        # start thread to handle periodic events
-        launch_thread(self.startPeriodicService, 'PeriodicService')
-
-        # launch worker threads for module processing
-        for i in range(0, self.config.main.workers):
-            name = 'ModuleWorker%s' % (i + 1)
-            launch_thread(self.process_module_queue, name)
-
-    def check_response_queue(self):
-        try:
-            response, req = self.response_queue.get_nowait()
-        except Empty:
-            return
-        except Exception, e:
-            log.exception(e)
-            return
-
-        # encode output, lock threads, and call protocol_output
-        try:
-            self.lock.acquire()
-            response = self.encode(response)
-            self.protocol_output(response, req)
-        except Exception, e:
-            log.error('error in output: %s' % repr(response))
-            log.exception(e)
-        try:
-            self.lock.release()
-        except:
-            pass
-        self.response_queue.task_done()
-
-    def process_module_queue(self):
-        while True:
-            try:
-                request = self.module_queue.get()
-            except Exception, e:
-                log.exception(e)
-                continue
-            self.process_module_item(request)
-            self.module_queue.task_done()
-
-    def stop(self):
-        """Stop the bot"""
-
-        # signal loops in threads that they should exit
-        self.running = False
-
-    def encode(self, text):
-        """Force output to the bots encoding"""
-        if isinstance(text, str):
-            for charset in self._codecs:
-                try:
-                    text = unicode(text, charset)
-                    break
-                except:
-                    pass
-
-            if isinstance(text, str):
-                text = unicode(text, 'ascii', 'replace')
-        try:
-            text = text.encode(self.charset)
-        except:
-            text = text.encode('ascii', 'replace')
-        return text
-
-    def output(self, message, req=None):
-        self.response_queue.put((message, req))
-
-    def protocol_output(self, message, req=None):
-        print message
-
-    def botName(self):
-        return 'madcow'
-
-    def checkAddressing(self, req):
-        """Is bot being addressed?"""
-        nick = re.escape(self.botName())
-
-        # recompile nick-based regex if it changes
-        if nick != self.cached_nick:
-            self.cached_nick = nick
-            self.re_cor = re.compile(r'^\s*no[ ,]+%s[ ,:-]+\s*(.+)$' % nick,
-                    re.I)
-            self.re_cor_addr = re.compile(r'^\s*no[ ,]+(.+)$', re.I)
-            self.re_feedback = re.compile(r'^\s*%s[ !]*\?[ !]*$' % nick, re.I)
-            self.re_addr_end = re.compile(r'^(.+),\s+%s\W*$' % nick, re.I)
-            self.re_addr_pre = re.compile(r'^\s*%s[-,: ]+(.+)$' % nick,
-                    re.I)
-
-        if self.re_feedback.search(req.message):
-            req.feedback = req.addressed = True
-
-        try:
-            req.message = self.re_addr_end.search(req.message).group(1)
-            req.addressed = True
-        except:
-            pass
-
-        try:
-            req.message = self.re_addr_pre.search(req.message).group(1)
-            req.addressed = True
-        except:
-            pass
-
-        try:
-            req.message = self.re_cor.search(req.message).group(1)
-            req.correction = req.addressed = True
-        except:
-            pass
-
-        if req.addressed:
-            try:
-                req.message = self.re.cor_addr.search(req.message).group(1)
-                req.correction = True
-            except:
-                pass
-
-    def logpublic(self, req):
-        """Logs public chatter"""
-        line = '%s <%s> %s\n' % (time.strftime('%T'), req.nick, req.message)
-        path = os.path.join(self.dir, 'logs', '%s-irc-%s-%s' % (self.ns,
-            req.channel, time.strftime('%F')))
-
-        fo = open(path, 'a')
-        try:
-            fo.write(line)
-        finally:
-            fo.close()
-
-    def usage(self):
-        """Returns help data as a string"""
-        return '\n'.join(sorted(self.usageLines))
-
-    def process_message(self, req):
-        """Process requests"""
-        if 'NOBOT' in req.message:
-            return
-        if self.config.main.logpublic and not req.private:
-            self.logpublic(req)
-        if req.nick.lower() in self.ignore_list:
-            log.info('Ignored "%s" from %s' % (req.message, req.nick))
-            return
-        if req.feedback:
-            self.output('yes?', req)
-            return
-        if req.addressed and req.message.lower() == 'help':
-            self.output(self.usage(), req)
-            return
-        if req.private:
-            response = self.admin.parse(req)
-            if response is not None and len(response):
-                self.output(response, req)
-                return
-        if self.config.main.module == 'cli' and req.message == 'reload':
-            self.reload_modules()
-        for mod_name, obj in self.modules.by_priority():
-            log.debug('trying: %s' % mod_name)
-
-            if obj.require_addressing and not req.addressed:
-                continue
-
-            try:
-                args = obj.pattern.search(req.message).groups()
-            except:
-                continue
-
-            req.matched = True # module can set this to false to avoid term
-
-            # see if we can filter some of this information..
-            kwargs = {'req': req}
-            kwargs.update(req.__dict__)
-            request = (obj, req.nick, args, kwargs,)
-
-            if self.config.main.module == 'cli' or not obj.allow_threading:
-                log.debug('running non-threaded code for module %s' % mod_name)
-                self.process_module_item(request)
-            else:
-                log.debug('launching thread for module: %s' % mod_name)
-                self.module_queue.put(request)
-
-            if obj.terminate and req.matched:
-                log.debug('terminating because %s matched' % mod_name)
-                break
-
-    def process_module_item(self, request):
-        obj, nick, args, kwargs = request
-        try:
-            response = obj.response(nick, args, kwargs)
-        except Exception, e:
-            log.warn('Uncaught module exception')
-            log.exception(e)
-
-        if response is not None and len(response) > 0:
-            self.output(response, kwargs['req'])
 
 
 class Config(Base):
