@@ -253,6 +253,9 @@ class Madcow(Base):
         if req.addressed and req.message.lower() == 'help':
             self.output(self.usage(), req)
             return
+        if req.addressed and req.message.lower() == 'version':
+            self.output(__version__, req)
+            return
         if req.private:
             response = self.admin.parse(req)
             if response is not None and len(response):
