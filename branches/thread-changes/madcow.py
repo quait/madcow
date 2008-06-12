@@ -807,7 +807,7 @@ class Config(Base):
             return self.sections['DEFAULT']
 
 def launch_thread(target, name, args=(), kwargs=None):
-    log.info('launching daemon thread: %s' % name)
+    log.debug('launching daemon thread: %s' % name)
     thread = Thread(target=target, name=name, args=args, kwargs=kwargs)
     thread.setDaemon(True)
     thread.start()
