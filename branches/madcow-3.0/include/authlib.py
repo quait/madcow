@@ -75,14 +75,14 @@ class AuthLib(object):
 
     def change_flags(self, user, flags):
         passwd = self.get_passwd()
-        if not passwd.has_key(user):
+        if user not in passwd:
             raise UserNotFound
         passwd[user]['flags'] = flags
         self.write_passwd(passwd)
 
     def change_password(self, user, plain):
         passwd = self.get_passwd()
-        if not passwd.has_key(user):
+        if user not in passwd:
             raise UserNotFound
         passwd[user]['password'] = self.encrypt(plain)
         self.write_passwd(passwd)
@@ -100,14 +100,14 @@ class AuthLib(object):
 
     def delete_user(self, user):
         passwd = self.get_passwd()
-        if not passwd.has_key(user):
+        if user not in passwd:
             raise UserNotFound, user
         del passwd[user]
         self.write_passwd(passwd)
 
     def check_user(self, user, plain):
         passwd = self.get_passwd()
-        if not passwd.has_key(user):
+        if user not in passwd:
             raise UserNotFound, user
         return self.check(passwd[user]['password'], plain)
 
@@ -117,7 +117,7 @@ class AuthLib(object):
 
     def get_flags(self, user):
         passwd = self.get_passwd()
-        if not passwd.has_key(user):
+        if user not in passwd:
             raise UserNotFound, user
         return passwd[user]['flags']
 
