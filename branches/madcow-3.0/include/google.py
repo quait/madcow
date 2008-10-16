@@ -30,7 +30,7 @@ class NonRedirectResponse(Error):
     """Raised when google doesn't return a redirect"""
 
 
-class Response(object):
+class Response:
 
     def __init__(self, data=''):
         self.data = data
@@ -53,7 +53,7 @@ class NoErrors(urllib.request.HTTPDefaultErrorHandler):
         return Response(data=dict(list(headers.items()))['location'])
 
 
-class Google(object):
+class Google:
     baseurl = 'http://www.google.com/'
     search = urljoin(baseurl, '/search')
     luckyopts = {'hl': 'en', 'btnI': 'I', 'aq': 'f', 'safe': 'off'}

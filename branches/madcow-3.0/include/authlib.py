@@ -37,7 +37,7 @@ class IllegalUserName(Exception):
     pass
 
 
-class AuthLib(object):
+class AuthLib:
 
     def __init__(self, path):
         self.path = path

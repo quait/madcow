@@ -37,7 +37,7 @@ html_title = re.compile(r'<title>(.*?)</title>', re.I)
 year = re.compile(r'\(\d{4}\)\s*$')
 badchars = re.compile(r'[^a-z0-9 ]', re.I)
 
-class IMDB(object):
+class IMDB:
     """Interface to IMDB"""
     baseurl = 'http://imdb.com/'
     search = urljoin(baseurl, '/find')
@@ -86,7 +86,7 @@ class IMDB(object):
             return
 
 
-class RottenTomatoes(object):
+class RottenTomatoes:
     """Interface to Rotten Tomatoes"""
     baseurl = 'http://www.rottentomatoes.com/'
     search = urljoin(baseurl, '/search/search.php')
@@ -138,7 +138,7 @@ class RottenTomatoes(object):
             return
 
 
-class MetaCritic(object):
+class MetaCritic:
     baseurl = 'http://www.metacritic.com/'
     search = urljoin(baseurl, '/search/process')
     movie_opts = {
@@ -195,7 +195,7 @@ class MetaCritic(object):
             return
 
 
-class MovieRatings(object):
+class MovieRatings:
     """Class that gets movie ratings from IMDB and Rotten Tomatoes"""
     sources = (IMDB(),
                RottenTomatoes(),

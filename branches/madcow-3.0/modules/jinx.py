@@ -30,7 +30,7 @@ import time
 from include.utils import Module
 import logging as log
 
-class ChatLine(object):
+class ChatLine:
   """Records a single line of IRC chat"""
   def __init__(self, nick, text):
     self.nick = nick
@@ -40,7 +40,7 @@ class ChatLine(object):
   def __str__(self):
     return "%s: <%s> %s\n" % (str(self.timestamp), self.nick, self.text)
 
-class ChatLog(object):
+class ChatLog:
   """Holds chat lines for a preconfigured duration of time"""
   def __init__(self, timeout=5):
     self.timeout = timeout

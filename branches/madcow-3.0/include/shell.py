@@ -27,7 +27,7 @@ __version__ = '0.1'
 __author__ = 'cj_ <cjones@gruntle.org>'
 __all__ = ['Shell']
 
-class Shell(object):
+class Shell:
     """Simple shell emulation.. might not work everywhere"""
     
     linefeed = '\r\n'

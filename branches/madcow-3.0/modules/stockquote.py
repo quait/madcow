@@ -34,7 +34,7 @@ __author__ = 'cj_ <cjones@gruntle.org>'
 _namespace = 'madcow'
 _dir = '..'
 
-class Yahoo(object):
+class Yahoo:
     _quote_url = 'http://finance.yahoo.com/q?s=SYMBOL'
     _isfloat = re.compile(r'^\s*-?\s*[0-9.,]+\s*$')
 

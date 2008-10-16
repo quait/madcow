@@ -24,7 +24,7 @@ class TwitterError(Exception):
   '''Base class for Twitter errors'''
 
 
-class Status(object):
+class Status:
   '''A class representing the Status structure used by the twitter API.
 
   The Status structure exposes the following properties:
@@ -284,7 +284,7 @@ class Status(object):
                   user=user)
 
 
-class User(object):
+class User:
   '''A class representing the User structure used by the twitter API.
 
   The User structure exposes the following properties:
@@ -553,7 +553,7 @@ class User(object):
                 url=data.get('url', None),
                 status=status)
 
-class DirectMessage(object):
+class DirectMessage:
   '''A class representing the DirectMessage structure used by the twitter API.
 
   The DirectMessage structure exposes the following properties:
@@ -821,7 +821,7 @@ class DirectMessage(object):
                          id=data.get('id', None),
                          recipient_screen_name=data.get('recipient_screen_name', None))
 
-class Api(object):
+class Api:
   '''A python interface into the Twitter API
 
   By default, the Api caches results for 1 minute.
@@ -1438,7 +1438,7 @@ class Api(object):
 class _FileCacheError(Exception):
   '''Base exception class for FileCache related errors'''
 
-class _FileCache(object):
+class _FileCache:
 
   DEPTH = 3
 

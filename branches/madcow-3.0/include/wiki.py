@@ -27,7 +27,7 @@ __version__ = '0.1'
 __author__ = 'cj_ <cjones@gruntle.org>'
 __all__ = ['Wiki']
 
-class Wiki(object):
+class Wiki:
     """Return summary from WikiMedia projects"""
 
     # site-specific details, default is english wikipedia

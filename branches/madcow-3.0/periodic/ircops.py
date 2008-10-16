@@ -20,7 +20,7 @@
 from time import time as unix_time, sleep
 import logging as log
 
-class Main(object):
+class Main:
 
     def __init__(self, madcow):
         self.madcow = madcow

@@ -49,7 +49,7 @@ SAMPLE_HASH = 'b1dd42c276abdf59f5f494dd7dbbb714'
 LOG = dict(level=log.INFO, stream=sys.stderr, datefmt='%x %X',
            format='[%(asctime)s] %(levelname)s: %(message)s')
 
-class Madcow(object):
+class Madcow:
 
     """Core bot handler, subclassed by protocols"""
 
@@ -391,7 +391,7 @@ class ConfigError(Exception):
     """Raised when a required config option is missing"""
 
 
-class User(object):
+class User:
 
     """This class represents a logged in user"""
 
@@ -411,7 +411,7 @@ class User(object):
             return False
 
 
-class Admin(object):
+class Admin:
 
     """Class to handle admin interface"""
 
@@ -605,7 +605,7 @@ class Admin(object):
         return 'You are now logged in. Message me "admin help" for help'
 
 
-class Modules(object):
+class Modules:
 
     """This class dynamically loads plugins and instantiates them"""
 
@@ -709,7 +709,7 @@ class Modules(object):
         return iter(self.dict().items())
 
 
-class Config(object):
+class Config:
 
     """Config class that allows dot-notation namespace addressing"""
 

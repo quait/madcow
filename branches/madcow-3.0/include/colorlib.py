@@ -37,7 +37,7 @@ class UnknownRainbowStyle(Exception):
     """Raised when an invalid style is requested"""
 
 
-class ColorLib(object):
+class ColorLib:
     _protocols = ['mirc', 'ansi', 'html']
     _codes = {
         'r': 'red',

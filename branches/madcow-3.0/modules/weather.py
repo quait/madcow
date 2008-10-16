@@ -35,7 +35,7 @@ __all__ = ['Weather', 'Main']
 
 USAGE = 'set location <nick> <location>'
 
-class Weather(object):
+class Weather:
     baseurl = 'http://www.wunderground.com/'
     search = urljoin(baseurl, '/cgi-bin/findweather/getForecast')
     _rss_link = {'type': 'application/rss+xml'}

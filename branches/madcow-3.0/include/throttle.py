@@ -33,7 +33,7 @@ def someRoutineInvokedByUser(user):
 import time
 import logging as log
 
-class ThrottleStatus(object):
+class ThrottleStatus:
 
     def __init__(self, user=None, name=None, parent=None):
         self.parent = parent
@@ -75,7 +75,7 @@ class ThrottleStatus(object):
     now = property(getNow)
 
 
-class ThrottleEvent(object):
+class ThrottleEvent:
 
     def __init__(self, name=None, parent=None):
         self.name = name
@@ -92,7 +92,7 @@ class ThrottleEvent(object):
         return status
 
 
-class Throttle(object):
+class Throttle:
 
     def __init__(self, enabled=True, count=3, threshold=2, reduction=10, ignore=300):
         self.enabled = enabled

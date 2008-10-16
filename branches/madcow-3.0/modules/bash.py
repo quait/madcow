@@ -25,21 +25,21 @@ from include.utils import Module, stripHTML
 from include.useragent import geturl
 import logging as log
 
-class Bash(object):
+class Bash:
     random = 'http://www.bash.org/?random'
     bynum = 'http://www.bash.org/?num'
     search = 'http://www.bash.org/?search=query&show=100'
     entries = re.compile('<p class="qt">(.*?)</p>', re.DOTALL)
 
 
-class QDB(object):
+class QDB:
     random = 'http://qdb.us/random'
     bynum = 'http://qdb.us/num'
     search = 'http://qdb.us/?search=query&limit=100&approved=1'
     entries = re.compile('<td[^>]+><p>(.*?)</p>', re.DOTALL)
 
 
-class Limerick(object):
+class Limerick:
     random = 'http://www.limerickdb.com/?random'
     bynum = 'http://www.limerickdb.com/?num'
     search = 'http://www.limerickdb.com/?search=query&number=100'

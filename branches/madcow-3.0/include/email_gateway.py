@@ -52,7 +52,7 @@ class ConnectionError(Error):
     """Raised when there is a problem sending to madcow listener"""
 
 
-class EmailGateway(object):
+class EmailGateway:
     _spams = ('This is an MMS message. Please go to http://mms.telusmobility.com/do/LegacyLogin to view the message.', 'You have new Picture Mail!')
     _quoted = r'^(-+)\s*(original|forwarded)\s+(message|e?mail)\s*\1'
     _quoted = re.compile(_quoted, re.I)

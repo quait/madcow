@@ -26,7 +26,7 @@ from include.utils import Module, stripHTML
 import re
 import logging as log
 
-class Delicious(object):
+class Delicious:
 
     """Simple API frontend"""
 

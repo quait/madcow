@@ -33,7 +33,7 @@ __all__ = []
 
 FORMAT = 'Terror: %s, DoomsDay: %s, IranWar: %s, IraqWar: %s, BodyCount: %s'
 
-class Terror(object):
+class Terror:
     _url = 'http://www.dhs.gov/dhspublic/getAdvisoryCondition'
     _re_level = re.compile(r'<THREAT_ADVISORY CONDITION="(\w+)" />')
     _color_map = {
@@ -59,7 +59,7 @@ class Terror(object):
             return 'UNKNOWN'
 
 
-class DoomsDay(object):
+class DoomsDay:
     _url = 'http://www.thebulletin.org/'
     _re_time = re.compile(r'<div class="module-content"><h3>(.*?)</h3>')
 
@@ -74,7 +74,7 @@ class DoomsDay(object):
             return 'UNKNOWN'
 
 
-class IranWar(object):
+class IranWar:
     _url = 'http://www.areweatwarwithiran.com/rss.xml'
 
     def war(self):
@@ -87,7 +87,7 @@ class IranWar(object):
             return 'UNKNOWN'
 
 
-class IraqWar(object):
+class IraqWar:
     _war_url = 'http://areweatwarwithiraq.com/rss.xml'
     _bodycount_url = 'http://www.iraqbodycount.org/'
     _re_whitespace = re.compile(r'\s+')

@@ -28,14 +28,14 @@ __version__ = '0.1'
 __author__ = 'cj_ <cjones@gruntle.org>'
 __all__ = ['Karma', 'Main']
 
-class KarmaResponse(object):
+class KarmaResponse:
 
     def __init__(self, reply, matched):
         self.reply = reply
         self.matched = matched
 
 
-class Karma(object):
+class Karma:
     """Infobot style karma"""
     _adjust_pattern = re.compile(r'^\s*(.*?)[+-]([+-]+)\s*$')
     _query_pattern = re.compile(r'^\s*karma\s+(\S+)\s*\?*\s*$')

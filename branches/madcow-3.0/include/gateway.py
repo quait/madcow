@@ -43,7 +43,7 @@ class ConnectionClosed(Exception):
     """Raised when client closes their end"""
 
 
-class GatewayService(object):
+class GatewayService:
     """Gateway service spawns TCP socket and listens for requests"""
 
     def run(self):

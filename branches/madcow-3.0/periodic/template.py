@@ -21,7 +21,7 @@
 
 """Template for periodic event"""
 
-class Main(object):
+class Main:
 
     def __init__(self, madcow):
         self.madcow = madcow

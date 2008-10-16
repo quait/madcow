@@ -48,7 +48,7 @@ class FontError(FigletError):
     """
 
 
-class FigletFont(object):
+class FigletFont:
     """
     This class represents the currently loaded font, including
     meta-data about how it should be displayed by default
@@ -231,7 +231,7 @@ class ZippedFigletFont(FigletFont):
         return [font[6:-4] for font in z.namelist() if font.endswith('.flf')]
 
 
-class FigletRenderingEngine(object):
+class FigletRenderingEngine:
     """
     This class handles the rendering of a FigletFont,
     including smushing/kerning/justification/direction
@@ -421,7 +421,7 @@ class FigletRenderingEngine(object):
         return FigletString(buffer)
 
 
-class Figlet(object):
+class Figlet:
     """
     Main figlet class.
     """

@@ -27,7 +27,7 @@ import string
 import random
 import types
 
-class Protocol(object):
+class Protocol:
 
     def __init__(self, host, port, timeout=60, bufsize=60):
         self.host = host
@@ -83,7 +83,7 @@ class Protocol(object):
     write = send
 
 
-class OSCARUser(object):
+class OSCARUser:
 
     def __init__(self, name, warn, tlvs):
         self.name = name
@@ -166,7 +166,7 @@ class OSCARUser(object):
         return s
 
 
-class SSIGroup(object):
+class SSIGroup:
 
     def __init__(self, name, tlvs = {}):
         self.name = name
@@ -186,7 +186,7 @@ class SSIGroup(object):
         return struct.pack('!H', len(self.name)) + self.name + struct.pack('!HH', groupID, buddyID) + '\000\001' + tlvData
 
 
-class SSIBuddy(object):
+class SSIBuddy:
 
     def __init__(self, name, tlvs = {}):
         self.name = name

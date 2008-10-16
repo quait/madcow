@@ -31,7 +31,7 @@ __version__ = '0.1'
 __author__ = 'cj_ <cjones@gruntle.org>'
 __all__ = []
 
-class Factoids(object):
+class Factoids:
     """
     This is a straight port of infobot.pl factoid handling.
     yes, this code is totally ridiculous, but it works pretty well. :P

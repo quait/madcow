@@ -74,7 +74,7 @@ entityMap = {
     8249: '<', 8250: '>', 8364: '$', 8482: '(tm)',
 }
 
-class Debug(object):
+class Debug:
     """Extra debugging class"""
 
     def __str__(self):
@@ -83,7 +83,7 @@ class Debug(object):
     __repr__ = __str__
 
 
-class Module(object):
+class Module:
     _any = re.compile(r'^(.+)$')
     pattern = re.compile('')
     enabled = True
@@ -101,7 +101,7 @@ class Module(object):
         return 'not implemented'
 
 
-class Request(object):
+class Request:
     """Generic object passed in from protocol handlers for processing"""
 
     def __init__(self, message):
@@ -117,7 +117,7 @@ class Request(object):
         self.addressed = False
 
 
-class cache(object):
+class cache:
     """Decorator for caching return values"""
     _timeout = 3600
 
@@ -146,7 +146,7 @@ class cache(object):
         return callback
 
 
-class throttle(object):
+class throttle:
     """Decorator for throttling requests to prevent abuse/spamming"""
 
     # defaults

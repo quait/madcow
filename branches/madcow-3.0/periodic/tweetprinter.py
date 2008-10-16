@@ -30,7 +30,7 @@ from include import twitter
 import time
 import logging as log
 
-class Main(object):
+class Main:
 
   def __init__(self, madcow):
     self.madcow = madcow
