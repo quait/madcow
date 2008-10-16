@@ -23,7 +23,7 @@ from include.utils import Module
 import logging as log
 import re
 from include.useragent import geturl
-from urlparse import urljoin
+from urllib.parse import urljoin
 from include.utils import stripHTML
 
 __version__ = '0.2'
@@ -133,7 +133,7 @@ class RottenTomatoes(object):
             response += ': %s%%' % rating
             return response
 
-        except Exception, msg:
+        except Exception as msg:
             log.exception(msg)
             return
 
@@ -237,7 +237,7 @@ class Main(Module):
             elif args[2] == 'topmovies':
                 response = self.movie.topmovies()
             return response
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return '%s: %s' % (nick, self.error)

@@ -23,7 +23,7 @@ import re
 from include.utils import Module, stripHTML
 from include.useragent import geturl
 from include.BeautifulSoup import BeautifulSoup
-from urlparse import urljoin
+from urllib.parse import urljoin
 import random
 import logging as log
 
@@ -45,7 +45,7 @@ class Main(Module):
             conf = stripHTML(conf)
             conf = conf.strip()
             return conf
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return '%s: I had some issues with that..' % nick

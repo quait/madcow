@@ -22,7 +22,7 @@
 import re
 from include.utils import Module
 from include.useragent import geturl
-from urlparse import urljoin
+from urllib.parse import urljoin
 import logging as log
 
 class Main(Module):
@@ -40,7 +40,7 @@ class Main(Module):
             city, state = self.city.search(doc).groups()
             city = ' '.join([x.lower().capitalize() for x in city.split()])
             return '%s: %s = %s, %s' % (nick, args[0], city, state)
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return "%s: I couldn't look that up for some reason.  D:" % nick

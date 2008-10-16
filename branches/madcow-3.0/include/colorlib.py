@@ -19,22 +19,21 @@
 
 """Color Library"""
 
-from utils import Error
 import re
 
 __version__ = '0.5'
 __author__ = 'cj_ <cjones@gruntle.org>'
 __all__ = ['ColorLib']
 
-class UnknownProtocol(Error):
+class UnknownProtocol(Exception):
     """Raised when protocol is not supported"""
 
 
-class UnknownColor(Error):
+class UnknownColor(Exception):
     """Raised when an unknown color is requested"""
 
 
-class UnknownRainbowStyle(Error):
+class UnknownRainbowStyle(Exception):
     """Raised when an invalid style is requested"""
 
 
@@ -132,7 +131,7 @@ class ColorLib(object):
 
     def __init__(self, protocol):
         if protocol not in self._protocols:
-            raise UnknownProtocol, protocol
+            raise UnknownProtocol(protocol)
         self.protocol = protocol
         self.rainbow_offset = {}
 
@@ -146,7 +145,7 @@ class ColorLib(object):
         if color == 'gray':
             color = 'light gray'
         if color not in self._color_map[self.protocol]:
-            raise UnknownColor, color
+            raise UnknownColor(color)
         return color
 
     def get_color(self, fg=None, bg=None, text=None):
@@ -200,7 +199,7 @@ class ColorLib(object):
 
     def rainbow(self, text, style='rainbow'):
         if style not in self._rainbow_map:
-            raise UnknownRainbowStyle, style
+            raise UnknownRainbowStyle(style)
         self.rainbow_offset.setdefault(style, 0)
         offset = self.rainbow_offset[style]
         output = ''

@@ -54,7 +54,7 @@ class Main(Module):
             else:
                 return '%s: No incidents found' % nick
 
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return '%s: I failed to perform that lookup' % nick

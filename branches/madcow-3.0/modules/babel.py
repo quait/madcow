@@ -22,7 +22,7 @@
 import re
 from include.utils import Module
 from include.useragent import posturl
-from urlparse import urljoin
+from urllib.parse import urljoin
 import logging as log
 
 class Main(Module):
@@ -54,7 +54,7 @@ class Main(Module):
     def response(self, nick, args, kwargs):
         try:
             if args[0] == 'list languages':
-                return '%s: %s' % (nick, ', '.join(self.languages.keys()))
+                return '%s: %s' % (nick, ', '.join(list(self.languages.keys())))
 
             try:
                 from_lang = self.languages[args[1].lower()]
@@ -76,7 +76,7 @@ class Main(Module):
             doc = posturl(self.translate, opts=opts)
             translated = self.re_translate.search(doc).group(1)
             return '%s: %s' % (nick, translated)
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return "%s: Couldn't translate for some reason :/" % nick

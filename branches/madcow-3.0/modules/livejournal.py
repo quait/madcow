@@ -23,7 +23,7 @@ import re
 from include import rssparser
 from include.utils import Module, stripHTML, isUTF8
 from include.useragent import geturl
-from urlparse import urljoin
+from urllib.parse import urljoin
 import logging as log
 
 class Main(Module):
@@ -65,7 +65,7 @@ class Main(Module):
 
             return '%s: [%s] %s' % (nick, page, entry)
 
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return "%s: Couldn't load the page LJ returned D:" % nick

@@ -22,9 +22,9 @@
 from include.utils import Module, stripHTML
 from include.useragent import geturl
 import re
-from urlparse import urljoin
+from urllib.parse import urljoin
 import random
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import logging as log
 
 class Main(Module):
@@ -42,7 +42,7 @@ class Main(Module):
         else:
             query = ' '.join(query.split())
             query = query.replace(' ', '_')
-            query = urllib.quote(query) + '.html'
+            query = urllib.parse.quote(query) + '.html'
             url = urljoin(self.baseurl, query)
         try:
             doc = geturl(url)
@@ -51,7 +51,7 @@ class Main(Module):
             title, art = result
             art = stripHTML(art)
             return '>>> %s <<<\n%s' % (title, art)
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return "%s: I had a problem with that, sorry." % nick

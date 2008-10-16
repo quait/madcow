@@ -58,7 +58,7 @@ def main():
 
         # construct new line
         ipadding = ' ' * (padding + indent)
-        name = '.'.join([i for i in class_name, funcname if i is not None])
+        name = '.'.join([i for i in (class_name, funcname) if i is not None])
         new = "%sprint 'DEBUG [%s] %s'\n" % (ipadding, linenum, name)
         sys.stdout.write(new)
         sys.stdout.flush()

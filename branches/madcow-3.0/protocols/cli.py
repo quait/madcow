@@ -55,7 +55,7 @@ class ConsoleProtocol(Madcow):
                 break
 
             if input.lower() == 'history':
-                print 'history: %s' % repr(self.shell.history)
+                print('history: %s' % repr(self.shell.history))
 
             if input.lower() == 'clear':
                 sys.stdout.write(self._clear)
@@ -85,7 +85,7 @@ class ConsoleProtocol(Madcow):
     def protocol_output(self, message, req=None):
         if req is not None and req.colorize is True:
             message = self.colorlib.rainbow(message)
-        print message
+        print(message)
 
 
 class ProtocolHandler(ConsoleProtocol):

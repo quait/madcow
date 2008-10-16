@@ -5,7 +5,7 @@
 import sys
 from optparse import OptionParser
 from BeautifulSoup import BeautifulSoup
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import re
 
 class HTMLParser:
@@ -35,7 +35,7 @@ def main():
 
     for url in args:
         data = parser.parse_url(url)
-        print str(data)
+        print(str(data))
 
 
     return 0

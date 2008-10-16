@@ -24,7 +24,7 @@ import logging as log
 import re
 from include.useragent import geturl
 from include.utils import stripHTML
-from urlparse import urljoin
+from urllib.parse import urljoin
 from include.colorlib import ColorLib
 
 __version__ = '0.1'
@@ -104,14 +104,14 @@ class Main(Module):
             if self.madcow:
                 self.madcow.output(response, kwargs['req'])
             else:
-                print response
+                print(response)
 
         try:
             for item in self._items_re.findall(args[0]):
                 response = self.lookup_item(item)
                 if response:
                     output(response)
-        except Exception, error:
+        except Exception as error:
             log.warn('error in %s: %s' % (self.__module__, error))
             log.exception(error)
 

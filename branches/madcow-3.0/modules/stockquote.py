@@ -22,7 +22,7 @@
 import re
 from include.utils import Module, stripHTML
 from include.useragent import geturl
-from urlparse import urljoin
+from urllib.parse import urljoin
 from include.BeautifulSoup import BeautifulSoup
 import random
 import logging as log
@@ -100,7 +100,7 @@ class Yahoo(object):
 
         # build friendly output
         output = []
-        for key, val in data.items():
+        for key, val in list(data.items()):
             if isinstance(val, float):
                 val = '%.2f' % val
             output.append('%s %s' % (key, val))
@@ -124,7 +124,7 @@ class Main(Module):
         query = args[0]
         try:
             return self.yahoo.get_quote(query)
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return "Symbol not found, market may have crashed"

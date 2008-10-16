@@ -23,7 +23,7 @@ from include.utils import Module
 import logging as log
 import re
 from include.useragent import geturl
-from urlparse import urljoin
+from urllib.parse import urljoin
 
 __version__ = '0.1'
 __author__ = 'cj_ <cjones@gruntle.org>'
@@ -65,9 +65,9 @@ class Main(Module):
 
     def get_location_data(self, loc):
         locs = self.get_locations()
-        for c, mx in locs.items():
+        for c, mx in list(locs.items()):
             if loc.lower() == c.lower():
-                m, x = mx.items()[0]
+                m, x = list(mx.items())[0]
                 x = x[0]
                 break
         return c, m, x
@@ -108,7 +108,7 @@ class Main(Module):
                     continue
             speeds = ', '.join(speeds)
             return '%s: %s mins. (%s miles) [%s]' % (nick, time, miles, speeds)
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return '%s: %s' % (nick, self.error)

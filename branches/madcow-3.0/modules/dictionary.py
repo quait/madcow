@@ -22,7 +22,7 @@
 import re
 from include.utils import stripHTML, Module
 from include.useragent import geturl
-from urlparse import urljoin
+from urllib.parse import urljoin
 import logging as log
 
 class Main(Module):
@@ -59,7 +59,7 @@ class Main(Module):
 
             return '%s: [%s/%s] %s' % (nick, num, len(defs), definition)
 
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return "%s: I couldn't look that up for some reason.  D:" % nick

@@ -20,8 +20,8 @@
 """Post URLs to delicious"""
 
 from include.useragent import UserAgent
-from urllib2 import HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler
-from urlparse import urljoin
+from urllib.request import HTTPPasswordMgrWithDefaultRealm, HTTPBasicAuthHandler
+from urllib.parse import urljoin
 from include.utils import Module, stripHTML
 import re
 import logging as log
@@ -79,6 +79,6 @@ class Main(Module):
         try:
             for url in self.url.findall(args[0]):
                 self.delicious.post(url, tags=['madcow', nick])
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)

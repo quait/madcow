@@ -34,7 +34,7 @@ class Main(object):
         # determine who can be opped
         auto_op = []
         passwd = self.madcow.admin.authlib.get_passwd()
-        for nick, data in passwd.items():
+        for nick, data in list(passwd.items()):
             if 'o' in data['flags']:
                 auto_op.append(nick.lower())
 
@@ -48,8 +48,8 @@ class Main(object):
             if delta >= (self.frequency * 2 -1):
                 return
 
-        for channel, names in self.madcow.names.items():
-            nicks = [nick for nick, opped in names.items() if not opped]
+        for channel, names in list(self.madcow.names.items()):
+            nicks = [nick for nick, opped in list(names.items()) if not opped]
             if self.madcow.server.get_nickname() in nicks:
                 log.warn('cannot give ops until i get it myself')
                 return

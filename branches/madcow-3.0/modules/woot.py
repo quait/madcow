@@ -19,7 +19,7 @@
 
 """get the current woot - author: Twid"""
 
-from urlparse import urljoin
+from urllib.parse import urljoin
 import re
 from include import rssparser
 from include.utils import Module, stripHTML
@@ -58,7 +58,7 @@ class Main(Module):
 
             return '%s: %s\n[%s]\n%s' % (offer, price, page, longdescription)
 
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return "%s: Couldn't load the page woot returned D:" % nick

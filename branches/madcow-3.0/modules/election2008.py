@@ -67,7 +67,7 @@ class Main(Module):
             if tie:
                 output.append(self.colorize('white', *tie))
             return '%s: %s' % (nick, ', '.join(output))
-        except Exception, error:
+        except Exception as error:
             log.warn('error in %s: %s' % (self.__module__, error))
             log.exception(error)
             return '%s: %s' % (nick, error)

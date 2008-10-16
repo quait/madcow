@@ -17,11 +17,11 @@
 
 """Return summary from WikiMedia projects"""
 
-from utils import stripHTML
-from useragent import geturl
-from BeautifulSoup import BeautifulSoup
+from .utils import stripHTML
+from .useragent import geturl
+from .BeautifulSoup import BeautifulSoup
 import re
-from urlparse import urljoin
+from urllib.parse import urljoin
 
 __version__ = '0.1'
 __author__ = 'cj_ <cjones@gruntle.org>'

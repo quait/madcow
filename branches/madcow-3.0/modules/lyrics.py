@@ -25,7 +25,7 @@ import re
 from include.useragent import geturl
 from include.utils import stripHTML
 from include.BeautifulSoup import BeautifulSoup
-from urlparse import urljoin
+from urllib.parse import urljoin
 from include.google import Google, NonRedirectResponse
 
 __version__ = '0.2'
@@ -67,9 +67,9 @@ class Main(Module):
             lyrics = str(soup.find('div', attrs={'class': 'lyricbox'}))
             lyrics = self.normalize(lyrics)
             if not lyrics or lyrics == 'None':
-                raise Exception, 'no results'
+                raise Exception('no results')
             return title + ':\n' + lyrics
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return '%s: %s' % (nick, e)

@@ -21,7 +21,7 @@ class ProtocolHandler(Madcow):
             try:
                 # in a real protocol, this should not block, otherwise
                 # incoming messages do not get processed
-                line = raw_input('>>> ')
+                line = input('>>> ')
 
                 # send message to bot subsystem for processing
                 self.process_message(line, os.environ['USER'])
@@ -33,7 +33,7 @@ class ProtocolHandler(Madcow):
                 self.running = False
             except EOFError:
                 self.running = False
-            except Exception, e:
+            except Exception as e:
                 log.exception(e)
 
     def botname(self):
@@ -42,7 +42,7 @@ class ProtocolHandler(Madcow):
 
     def protocol_output(self, message, req=None):
         """Protocol-specific output method"""
-        print message
+        print(message)
 
     def process_message(self, message, nick):
         """Create request object from recived message and process it"""

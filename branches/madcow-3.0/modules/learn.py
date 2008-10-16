@@ -20,7 +20,7 @@
 """Module to handle learning"""
 
 import re
-import anydbm
+import dbm
 from include.utils import Module
 import logging as log
 
@@ -41,14 +41,14 @@ class Main(Module):
 
     def dbm(self, db):
         dbfile = self.dbfile(db)
-        return anydbm.open(dbfile, 'c', 0640)
+        return dbm.open(dbfile, 'c', 0o640)
 
     def get_db(self, db):
         dbm = self.dbm(db)
         db = {}
-        for key in dbm.keys():
+        for key in list(dbm.ndbm.keys()):
             db[key] = dbm[key]
-        dbm.close()
+        dbm.ndbm.close()
         return db
 
     def lookup(self, db, key):
@@ -57,13 +57,13 @@ class Main(Module):
             val = dbm[key.lower()]
         except:
             val = None
-        dbm.close()
+        dbm.ndbm.close()
         return val
 
     def set(self, db, key, val):
         dbm = self.dbm(db)
         dbm[key.lower()] = val
-        dbm.close()
+        dbm.ndbm.close()
 
     def response(self, nick, args, kwargs):
         try:
@@ -72,7 +72,7 @@ class Main(Module):
                 return '%s: unknown database' % nick
             self.set(db, key, val)
             return '%s: set %s\'s %s to %s' % (nick, key, db, val)
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return "%s: couldn't set that" % nick

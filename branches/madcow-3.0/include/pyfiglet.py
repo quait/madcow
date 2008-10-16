@@ -76,18 +76,19 @@ class FigletFont(object):
         """
         fontPath = '%s/%s.flf' % (self.prefix, self.font)
         if os.path.exists(fontPath) is False:
-            raise FontNotFound, "%s doesn't exist" % fontPath
+            raise FontNotFound("%s doesn't exist" % fontPath)
 
         try:
             fo = open(fontPath, 'rb')
-        except Exception, e:
-            raise FontError, "couldn't open %s: %s" % (fontPath, e)
+        except Exception as e:
+            raise FontError("couldn't open %s: %s" % (fontPath, e))
 
         try: self.data = fo.read()
         finally: fo.close()
 
     def getFonts(self):
-        return [font[:-4] for font in os.walk(self.prefix).next()[2] if font.endswith('.flf')]
+        return [font[:-4] for font in next(os.walk(self.prefix))[2]
+                if font.endswith('.flf')]
 
     def loadFont(self):
         """
@@ -99,16 +100,16 @@ class FigletFont(object):
 
             header = data.pop(0)
             if self.reMagicNumber.search(header) is None:
-                raise FontError, '%s is not a valid figlet font' % fontPath
+                raise FontError('%s is not a valid figlet font' % fontPath)
 
             header = self.reMagicNumber.sub('', header)
             header = header.split()
             
             if len(header) < 6:
-                raise FontError, 'malformed header for %s' % fontPath
+                raise FontError('malformed header for %s' % fontPath)
 
             hardBlank = header[0]
-            height, baseLine, maxLength, oldLayout, commentLines = map(int, header[1:6])
+            height, baseLine, maxLength, oldLayout, commentLines = list(map(int, header[1:6]))
             printDirection = fullLayout = codeTagCount = None
 
             # these are all optional for backwards compat
@@ -157,8 +158,8 @@ class FigletFont(object):
                     self.chars[i] = chars
                     self.width[i] = width
 
-        except Exception, e:
-            raise FontError, 'problem parsing %s font: %s' % (self.font, e)
+        except Exception as e:
+            raise FontError('problem parsing %s font: %s' % (self.font, e))
 
     def __str__(self):
         return '<FigletFont object: %s>' % self.font
@@ -207,7 +208,7 @@ class ZippedFigletFont(FigletFont):
 
     def readFontFile(self):
         if os.path.exists(self.zipfile) is False:
-            raise FontNotFound, "%s doesn't exist" % self.zipfile
+            raise FontNotFound("%s doesn't exist" % self.zipfile)
 
         fontPath = 'fonts/%s.flf' % self.font
 
@@ -215,16 +216,16 @@ class ZippedFigletFont(FigletFont):
             z = ZipFile(self.zipfile, 'r')
             files = z.namelist()
             if fontPath not in files:
-                raise FontNotFound, '%s not found in %s' % (self.font, self.zipfile)
+                raise FontNotFound('%s not found in %s' % (self.font, self.zipfile))
 
             self.data = z.read(fontPath)
 
-        except Exception, e:
-            raise FontError, "couldn't open %s: %s" % (fontPath, e)
+        except Exception as e:
+            raise FontError("couldn't open %s: %s" % (fontPath, e))
 
     def getFonts(self):
         if os.path.exists(self.zipfile) is False:
-            raise FontNotFound, "%s doesn't exist" % self.zipfile
+            raise FontNotFound("%s doesn't exist" % self.zipfile)
 
         z = ZipFile(self.zipfile, 'r')
         return [font[6:-4] for font in z.namelist() if font.endswith('.flf')]
@@ -455,7 +456,7 @@ class Figlet(object):
             except: pass
 
         if Font is None:
-            raise FontNotFound, "Couldn't load font %s: Not found" % self.font
+            raise FontNotFound("Couldn't load font %s: Not found" % self.font)
 
         self.Font = Font
 
@@ -527,7 +528,7 @@ def main():
     r = f.renderText(text)
     if opts.reverse is True: r = r.reverse()
     if opts.flip is True: r = r.flip()
-    print r
+    print(r)
 
     return 0
 

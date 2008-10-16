@@ -22,8 +22,8 @@
 import re
 from include import rssparser
 from include.utils import Module, stripHTML
-import urllib
-from urlparse import urljoin
+import urllib.request, urllib.parse, urllib.error
+from urllib.parse import urljoin
 import logging as log
 
 class Main(Module):
@@ -44,7 +44,7 @@ class Main(Module):
             if not query or query == 'headline':
                 url = self._world_url
             else:
-                url = self._search_url + urllib.quote(query)
+                url = self._search_url + urllib.parse.quote(query)
                             
             feed = rssparser.parse(url)
             item = feed['items'][0]
@@ -53,7 +53,7 @@ class Main(Module):
             sum = stripHTML(item['description'])
             return '\n'.join((url, title, sum))
             
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return '%s: %s' % (nick, self._error)

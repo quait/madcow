@@ -41,7 +41,7 @@ class Main(Module):
     def response(self, nick, args, kwargs):
         try:
             return self.wiki.get_summary(args)
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return '%s: problem with query: %s' % (nick, e)

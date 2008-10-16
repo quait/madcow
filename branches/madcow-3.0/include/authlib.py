@@ -19,7 +19,6 @@
 
 """Handles authentication in Madcow"""
 
-from utils import Error
 from random import randint
 from hashlib import sha1
 from base64 import b64encode, b64decode
@@ -28,12 +27,12 @@ __version__ = '0.2'
 __author__ = 'cj_ <cjones@gruntle.org>'
 __all__ = ['UserNotFound', 'IllegalUserName', 'AuthLib']
 
-class UserNotFound(Error):
+class UserNotFound(Exception):
 
     pass
 
 
-class IllegalUserName(Error):
+class IllegalUserName(Exception):
 
     pass
 
@@ -63,7 +62,7 @@ class AuthLib(object):
 
     def write_passwd(self, passwd):
         data = []
-        for user, user_data in passwd.items():
+        for user, user_data in list(passwd.items()):
             line = ':'.join([user, user_data['password'], user_data['flags']])
             data.append(line)
         data = '\n'.join(data) + '\n'
@@ -89,7 +88,7 @@ class AuthLib(object):
 
     def add_user(self, user, plain, flags=''):
         if ':' in user:
-            raise IllegalUserName, 'usernames cannot have : in them'
+            raise IllegalUserName('usernames cannot have : in them')
         if plain == None:
             password = '*'
         else:
@@ -101,24 +100,24 @@ class AuthLib(object):
     def delete_user(self, user):
         passwd = self.get_passwd()
         if user not in passwd:
-            raise UserNotFound, user
+            raise UserNotFound(user)
         del passwd[user]
         self.write_passwd(passwd)
 
     def check_user(self, user, plain):
         passwd = self.get_passwd()
         if user not in passwd:
-            raise UserNotFound, user
+            raise UserNotFound(user)
         return self.check(passwd[user]['password'], plain)
 
     def user_exists(self, user):
         passwd = self.get_passwd()
-        return passwd.has_key(user)
+        return user in passwd
 
     def get_flags(self, user):
         passwd = self.get_passwd()
         if user not in passwd:
-            raise UserNotFound, user
+            raise UserNotFound(user)
         return passwd[user]['flags']
 
     def encrypt(self, plain):

@@ -20,7 +20,7 @@
 """Summon people"""
 
 import re
-from learn import Main as Learn
+from .learn import Main as Learn
 from include.utils import Module
 from smtplib import SMTP
 import logging as log
@@ -53,7 +53,7 @@ class Main(Module):
 
             return "%s: summoned %s" % (nick, sendto)
 
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return "%s: I couldn't make that summon: %s" % (nick, e)

@@ -59,7 +59,7 @@ class Main(Module):
             text = self.figlet.renderText(args[0])
             return text
 
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return '%s: figlet :(' % nick

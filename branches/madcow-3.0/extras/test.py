@@ -223,7 +223,7 @@ class Main(Module):
                     try:
                         args = obj.pattern.search(req.message).groups()
                     except:
-                        print "\n* args didn't match"
+                        print("\n* args didn't match")
                         passed = False
                         break
                     kwargs = {'req': req}
@@ -232,15 +232,15 @@ class Main(Module):
                     if isinstance(t['result'], str):
                         if response != t['result']:
                             passed = False
-                            print "\n* string object didn't match"
+                            print("\n* string object didn't match")
                             break
                     elif isinstance(t['result'], retype):
                         if t['result'].search(response) is None:
                             passed = False
-                            print "\n* regex didn't match"
+                            print("\n* regex didn't match")
                             break
-                except Exception, e:
-                    print "\n* exception: %s" % e
+                except Exception as e:
+                    print("\n* exception: %s" % e)
                     passed = False
             if passed:
                 sys.stderr.write('ok\r\n')
@@ -248,6 +248,6 @@ class Main(Module):
                 sys.stderr.write('fail [%s]\r\n' % repr(response))
             results[mod_name] = passed
         tested = len(results)
-        passed = len([m for m, r in results.items() if r])
+        passed = len([m for m, r in list(results.items()) if r])
         return 'results: %s / %s passed' % (passed, tested)
 

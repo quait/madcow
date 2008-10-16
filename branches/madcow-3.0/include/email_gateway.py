@@ -25,7 +25,7 @@ import email
 import mimetypes
 import socket
 from email.Header import decode_header
-from useragent import geturl
+from .useragent import geturl
 
 # add madcow base directory to path
 _basedir = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), '..'))
@@ -90,8 +90,8 @@ class EmailGateway(object):
         # at this point, text could be None, '', or have something interesting
         try:
             text = [self.clean(text), self.clean(message['subject'])]
-            text = filter(lambda x: isinstance(x, str), text)
-            text = filter(lambda x: len(x), text)
+            text = [x for x in text if isinstance(x, str)]
+            text = [x for x in text if len(x)]
             text = ' / '.join(text)
         except:
             pass
@@ -101,9 +101,9 @@ class EmailGateway(object):
         sender = message['from']
         sender = self._remove_quotes.sub(r'\2', sender)
         headers = decode_header(sender)
-        header_parts = [unicode(part, charset or 'ascii') for part,
+        header_parts = [str(part, charset or 'ascii') for part,
                 charset in headers]
-        sender = str(u' '.join(header_parts))
+        sender = str(' '.join(header_parts))
 
         headers = []
         headers.append('to: ' + self.channel)
@@ -112,7 +112,7 @@ class EmailGateway(object):
             headers.append('message: ' + text)
         else:
             if image is None:
-                raise ParsingError, "need a message for non-image mail"
+                raise ParsingError("need a message for non-image mail")
         if image:
             headers.append('type: image')
             headers.append('size: %s' % len(image))
@@ -127,8 +127,8 @@ class EmailGateway(object):
             s.connect(self.service)
             s.send(output)
             s.close()
-        except Exception, e:
-            raise ConnectionError, 'problem injecting mail: %s' % e
+        except Exception as e:
+            raise ConnectionError('problem injecting mail: %s' % e)
 
     def clean(self, text):
         if text is None:

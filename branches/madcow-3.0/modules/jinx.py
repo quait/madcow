@@ -55,9 +55,9 @@ class ChatLog(object):
     """If a line exists in the log that matches the line passed in, returns that line object, 
     otherwise returns None.  A line 'matches' if the text is the same, case insensitive and
     ignoring whitespace."""
-    tokens = map(str.lower, line.text.split()) # easy way to ignore case and whitespace
+    tokens = list(map(str.lower, line.text.split())) # easy way to ignore case and whitespace
     for l in self.lines:
-      if map(str.lower, l.text.split()) == tokens:
+      if list(map(str.lower, l.text.split())) == tokens:
         return l # found a match
     
     return None # no matches found
@@ -96,6 +96,6 @@ class Main(Module):
       oldline = self.log.getMatchingLine(cl)
       if oldline and oldline.nick != nick:
         return "Jinx! %s owes %s a coke!" % (nick, oldline.nick)
-    except Exception, e:
+    except Exception as e:
       log.warn('error in %s: %s' % (self.__module__, e))
       log.exception(e)

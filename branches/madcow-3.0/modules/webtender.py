@@ -22,7 +22,7 @@
 import re
 from include.utils import Module, stripHTML
 from include.useragent import geturl
-from urlparse import urljoin
+from urllib.parse import urljoin
 import logging as log
 
 class Main(Module):
@@ -50,7 +50,7 @@ class Main(Module):
                     ', '.join(ingredients), instructions)
             response = stripHTML(response)
             return response
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return "%s: Something ungood happened looking that up, sry" % nick

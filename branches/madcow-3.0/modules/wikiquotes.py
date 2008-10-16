@@ -47,7 +47,7 @@ class Main(Module):
                 return self._get_random_quote(author=author)
             except:
                 pass
-        raise Exception, 'no parseable page found :('
+        raise Exception('no parseable page found :(')
 
     def extract_quote(self, obj):
         li = obj.find('li')
@@ -89,7 +89,7 @@ class Main(Module):
                 author = _author
                 max = _max
             return self.get_random_quote(author=author, max=max)
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return '%s: problem with query: %s' % (nick, e)

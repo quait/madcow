@@ -22,10 +22,10 @@
 import re
 from include.utils import stripHTML, Module
 from include.useragent import geturl
-from urlparse import urljoin
+from urllib.parse import urljoin
 from include.BeautifulSoup import BeautifulSoup
 from include import rssparser
-from learn import Main as Learn
+from .learn import Main as Learn
 import logging as log
 from include.colorlib import ColorLib
 
@@ -112,7 +112,7 @@ class Weather(object):
             pass
 
         output = []
-        for key, val in data.items():
+        for key, val in list(data.items()):
             line = '%s: %s' % (key, val)
             output.append(line)
 
@@ -156,7 +156,7 @@ class Main(Module):
 
         try:
             return '%s: %s' % (nick, self.weather.forecast(query))
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return "Couldn't find that place, maybe a bomb dropped on it"

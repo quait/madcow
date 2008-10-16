@@ -11,8 +11,8 @@ def main():
         f.close()
 
     lines = data.splitlines()
-    lines = map(lambda x: x.rstrip(), lines)
-    lines = filter(lambda x: len(x), lines)
+    lines = [x.rstrip() for x in lines]
+    lines = [x for x in lines if len(x)]
     lines.reverse()
 
     fixed = []
@@ -24,7 +24,7 @@ def main():
             fixed += ['', '']
     fixed.reverse()
 
-    print '\n'.join(fixed)
+    print('\n'.join(fixed))
 
     return 0
 

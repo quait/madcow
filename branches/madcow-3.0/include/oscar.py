@@ -90,7 +90,7 @@ class OSCARUser(object):
         self.warning = warn
         self.flags = []
         self.caps = []
-        for k,v in tlvs.items():
+        for k,v in list(tlvs.items()):
             if k == 1:
                 v=struct.unpack('!H',v)[0]
                 for o, f in [(1,'trial'),
@@ -191,7 +191,7 @@ class SSIBuddy(object):
     def __init__(self, name, tlvs = {}):
         self.name = name
         self.tlvs = tlvs
-        for k,v in tlvs.items():
+        for k,v in list(tlvs.items()):
             if k == 0x013c:
                 self.buddyComment = v
             elif k == 0x013d:
@@ -213,7 +213,7 @@ class SSIBuddy(object):
                 self.alertSound = v
 
     def oscarRep(self, groupID, buddyID):
-        tlvData = reduce(lambda x,y: x+y, map(lambda (k,v):TLV(k,v), self.tlvs.items())) or '\000\000'
+        tlvData = reduce(lambda x,y: x+y, [TLV(k_v[0],k_v[1]) for k_v in list(self.tlvs.items())]) or '\000\000'
         return struct.pack('!H', len(self.name)) + self.name + struct.pack('!HH', groupID, buddyID) + '\000\000' + tlvData
 
 
@@ -443,7 +443,7 @@ class BOSConnection(SNACBased):
         if channel == 1:
             flags = []
             multiparts = []
-            for k, v in tlvs.items():
+            for k, v in list(tlvs.items()):
                 if k == 2:
                     while v:
                         v = v[2:]
@@ -507,7 +507,7 @@ class BOSConnection(SNACBased):
             pass
 
     def _cbGetChatInfoForInvite(self, info, user, message):
-        apply(self.receiveChatInvite, (user,message)+info)
+        self.receiveChatInvite(*(user,message)+info)
 
     def oscar_09_03(self, snac):
         tlvs = readTLVs(snac[3])
@@ -639,9 +639,9 @@ class BOSConnection(SNACBased):
     def sendMessage(self, user, message, wantAck = 0, autoResponse = 0, offline = 0 ):
         data = ''.join([chr(random.randrange(0, 127)) for i in range(8)])
         data = data + '\x00\x01' + chr(len(user)) + user
-        if not type(message) in (types.TupleType, types.ListType):
+        if not type(message) in (tuple, list):
             message = [[message,]]
-            if type(message[0][0]) == types.UnicodeType:
+            if type(message[0][0]) == str:
                 message[0].append('unicode')
         messageData = ''
         for part in message:
@@ -758,7 +758,7 @@ class OSCARService(SNACBased):
         self.d = d
 
     def connectionLost(self, reason):
-        for k,v in self.bos.services.items():
+        for k,v in list(self.bos.services.items()):
             if v == self:
                 del self.bos.services[k]
                 return
@@ -965,7 +965,7 @@ class OscarAuthenticator(OscarConnection):
 
     def error(self,error,url):
         if self.deferred: self.deferred.errback((error,url))
-        print 'stopping because of error()'
+        print('stopping because of error()')
         self.stop()
 
 
@@ -1004,8 +1004,8 @@ def logPacketData(data):
     if lines*16 != len(data): lines=lines+1
     for i in range(lines):
         d = tuple(data[16*i:16*i+16])
-        hex = map(lambda x: "%02X"%ord(x),d)
-        text = map(lambda x: (len(repr(x))>3 and '.') or x, d)
+        hex = ["%02X"%ord(x) for x in d]
+        text = [(len(repr(x))>3 and '.') or x for x in d]
 
 def SNAC(fam,sub,id,data,flags=[0,0]):
     header="!HHBBL"
@@ -1044,7 +1044,7 @@ def encryptPasswordMD5(password,key):
 
 def encryptPasswordICQ(password):
     key=[0xF3,0x26,0x81,0xC4,0x39,0x86,0xDB,0x92,0x71,0xA3,0xB9,0xE6,0x53,0x7A,0x95,0x7C]
-    bytes=map(ord,password)
+    bytes=list(map(ord,password))
     r=""
     for i in range(len(bytes)):
         r=r+chr(bytes[i]^key[i%len(key)])

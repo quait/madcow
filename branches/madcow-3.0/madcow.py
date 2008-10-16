@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/exports/home/cjones/local/python3/bin/python3.0
 #
 # Copyright (C) 2007, 2008 Christopher Jones
 #
@@ -21,22 +21,21 @@
 
 import sys
 import os
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 from optparse import OptionParser
 import re
 from time import sleep, strftime, time as unix_time
 import logging as log
 from include.authlib import AuthLib
-from include.utils import Error, slurp, Request
+from include.utils import slurp, Request
 from select import select
 from signal import signal, SIGHUP, SIGTERM
 import shutil
 from threading import Thread, RLock
-from Queue import Queue, Empty
-from types import StringTypes, StringType
-from include import useragent as ua
+from queue import Queue, Empty
+from include import useragent
 from hashlib import md5
-from urlparse import urljoin
+from urllib.parse import urljoin
 from include import gateway
 
 __version__ = '1.4.1'
@@ -44,11 +43,11 @@ __author__ = 'cj_ <cjones@gruntle.org>'
 __all__ = ['Request', 'Madcow', 'Config']
 
 MADCOW_URL = 'http://code.google.com/p/madcow/'
-LOGFORMAT = '[%(asctime)s] %(levelname)s: %(message)s'
-LOGLEVEL = log.WARN
 CHARSET = 'latin1'
 CONFIG = 'madcow.ini'
 SAMPLE_HASH = 'b1dd42c276abdf59f5f494dd7dbbb714'
+LOG = dict(level=log.INFO, stream=sys.stderr, datefmt='%x %X',
+           format='[%(asctime)s] %(levelname)s: %(message)s')
 
 class Madcow(object):
 
@@ -160,45 +159,26 @@ class Madcow(object):
             response, req = self.response_queue.get_nowait()
         except Empty:
             return
-        except Exception, exc:
-            log.exception(exc)
+        except Exception as error:
+            log.exception(error)
             return
         self.handle_response(response, req)
 
     def handle_response(self, response, req=None):
         """encode output, lock threads, and call protocol_output"""
-        response = self.encode(response)
         try:
             self.lock.acquire()
             try:
                 self.protocol_output(response, req)
-            except Exception, exc:
+            except Exception as error:
                 log.error('error in output: %s' % repr(response))
                 log.exception(exc)
         finally:
             self.lock.release()
 
-    def encode(self, text):
-        """Force output to the bots encoding if possible"""
-        if isinstance(text, StringTypes):
-            for charset in self._codecs:
-                try:
-                    text = unicode(text, charset)
-                    break
-                except:
-                    pass
-
-            if isinstance(text, StringType):
-                text = unicode(text, 'ascii', 'replace')
-        try:
-            text = text.encode(self.charset)
-        except:
-            text = text.encode('ascii', 'replace')
-        return text
-
     def protocol_output(self, message, req=None):
         """Override with protocol-specific output method"""
-        print message
+        print(message)
 
     ### MODULE PROCESSING ###
 
@@ -208,17 +188,17 @@ class Madcow(object):
             request = self.request_queue.get()
             try:
                 self.process_module_item(request)
-            except Exception, e:
-                log.exception(e)
+            except Exception as error:
+                log.exception(error)
 
     def process_module_item(self, request):
         """Run module response method and output any response"""
         obj, nick, args, kwargs = request
         try:
             response = obj.response(nick, args, kwargs)
-        except Exception, exc:
+        except Exception as error:
             log.warn('Uncaught module exception')
-            log.exception(exc)
+            log.exception(error)
             return
 
         if response is not None and len(response) > 0:
@@ -381,7 +361,7 @@ class PeriodicEvents(Service):
         """While bot is alive, process periodic event queue"""
         delay = 5
         now = unix_time()
-        for mod_name, obj in self.bot.periodics.dict().items():
+        for mod_name, obj in list(self.bot.periodics.dict().items()):
             self.last_run[mod_name] = now - obj.frequency + delay
 
         while self.bot.running:
@@ -391,7 +371,7 @@ class PeriodicEvents(Service):
     def process_queue(self):
         """Process queue"""
         now = unix_time()
-        for mod_name, obj in self.bot.periodics.dict().items():
+        for mod_name, obj in list(self.bot.periodics.dict().items()):
             if (now - self.last_run[mod_name]) < obj.frequency:
                 continue
             self.last_run[mod_name] = now
@@ -401,12 +381,12 @@ class PeriodicEvents(Service):
             self.bot.request_queue.put(request)
 
 
-class FileNotFound(Error):
+class FileNotFound(Exception):
 
     """Raised when a file is not found"""
 
 
-class ConfigError(Error):
+class ConfigError(Exception):
 
     """Raised when a required config option is missing"""
 
@@ -548,7 +528,7 @@ class Admin(object):
             if self._reListUsers.search(command):
                 output = []
                 passwd = self.authlib.get_passwd()
-                for luser, data in passwd.items():
+                for luser, data in list(passwd.items()):
                     flags = []
                     if 'a' in data['flags']:
                         flags.append('admin')
@@ -643,14 +623,14 @@ class Modules(object):
     def load_modules(self):
         """Load/reload modules"""
         disabled = list(self._ignore_mods)
-        for mod_name, enabled in self.madcow.config.modules.settings.items():
+        for mod_name, enabled in list(self.madcow.config.modules.settings.items()):
             if not enabled:
                 disabled.append(mod_name)
         log.info('reading modules from %s' % self.mod_dir)
         try:
-            filenames = os.walk(self.mod_dir).next()[2]
-        except Exception, exc:
-            log.warn("Couldn't load modules from %s: %s" % (self.mod_dir, exc))
+            filenames = next(os.walk(self.mod_dir))[2]
+        except Exception as error:
+            log.warn("Couldn't load modules %s: %s" % (self.mod_dir, error))
             return
         for filename in filenames:
             if not self._pyext.search(filename):
@@ -664,8 +644,8 @@ class Modules(object):
                 try:
                     reload(mod)
                     log.debug('reloaded module %s' % mod_name)
-                except Exception, exc:
-                    log.warn("couldn't reload %s: %s" % (mod_name, exc))
+                except Exception as error:
+                    log.warn("couldn't reload %s: %s" % (mod_name, error))
                     del self.modules[mod_name]
                     continue
             else:
@@ -676,14 +656,14 @@ class Modules(object):
                         locals(),
                         ['Main'],
                     )
-                except Exception, exc:
-                    log.warn("couldn't load module %s: %s" % (mod_name, exc))
+                except Exception as error:
+                    log.warn("couldn't load module %s: %s" % (mod_name, error))
                     continue
                 self.modules[mod_name] = {'mod': mod}
             try:
                 obj = getattr(mod, 'Main')(self.madcow)
-            except Exception, exc:
-                log.warn("failure loading %s: %s" % (mod_name, exc))
+            except Exception as error:
+                log.warn("failure loading %s: %s" % (mod_name, error))
                 del self.modules[mod_name]
                 continue
             if not obj.enabled:
@@ -716,19 +696,17 @@ class Modules(object):
     def by_priority(self):
         """Return list of tuples for modules, sorted by priority"""
         modules = self.dict()
-        modules = sorted(modules.items(), lambda x, y: cmp(x[1].priority,
-            y[1].priority))
-        return modules
+        return sorted(modules.items(), key=lambda item: item[1].priority)
 
     def dict(self):
         """Return dict of modules"""
         modules = {}
-        for mod_name, mod_data in self.modules.items():
+        for mod_name, mod_data in list(self.modules.items()):
             modules[mod_name] = mod_data['obj']
         return modules
 
     def __iter__(self):
-        return self.dict().iteritems()
+        return iter(self.dict().items())
 
 
 class Config(object):
@@ -760,13 +738,13 @@ class Config(object):
             if attr in self.settings:
                 return self.settings[attr]
             else:
-                raise ConfigError, 'missing setting %s in section %s' % (
-                        attr, self.name)
+                raise ConfigError('missing setting %s in section %s' % (
+                        attr, self.name))
 
 
     def __init__(self, filename):
         if not os.path.exists(filename):
-            raise FileNotFound, filename
+            raise FileNotFound(filename)
         parser = ConfigParser()
         parser.read(filename)
         self.sections = {}
@@ -778,7 +756,7 @@ class Config(object):
         if attr in self.sections:
             return self.sections[attr]
         else:
-            raise ConfigError, "missing section: %s" % attr
+            raise ConfigError("missing section: %s" % attr)
 
 
 def check_config(config, samplefile, prefix):
@@ -793,8 +771,8 @@ def check_config(config, samplefile, prefix):
     hash.update(slurp(samplefile))
     hash = hash.hexdigest()
     if hash != SAMPLE_HASH:
-        print >> sys.stderr, 'WARNING: %s is out of date or has been altered!' \
-            % os.path.basename(samplefile)
+        print('WARNING: %s is out of date or has been altered!' \
+            % os.path.basename(samplefile), file=sys.stderr)
 
     # read sample file
     sample = ConfigParser()
@@ -807,7 +785,7 @@ def check_config(config, samplefile, prefix):
 
     # look for valid protocols
     protocols = []
-    for proto in os.walk(os.path.join(prefix, 'protocols')).next()[2]:
+    for proto in next(os.walk(os.path.join(prefix, 'protocols')))[2]:
         try:
             name = re.search(r'^([^_]{2}\S+)\.py$', proto).group(1)
             if name == 'template':
@@ -860,13 +838,13 @@ def check_config(config, samplefile, prefix):
     if missing_sections:
         missing_sections = ['[%s]' % i for i in missing_sections]
         errors.append('Missing sections: ' + ','.join(missing_sections))
-    for section, options in missing_options.items():
+    for section, options in list(missing_options.items()):
         errors.append('Section [%s] missing options: %s' % (section,
             ', '.join(options)))
 
     # raise exception if any errors are found
     if errors:
-        raise ConfigError, '\n'.join(errors)
+        raise ConfigError('\n'.join(errors))
 
 
 def detach():
@@ -905,6 +883,8 @@ def stop_logging(handler_name):
 def main():
     """Entry point to set up bot and run it"""
 
+    log.basicConfig(**LOG)
+
     # where we are being run from
     if __file__.startswith(sys.argv[0]):
         prefix = sys.argv[0]
@@ -924,31 +904,41 @@ def main():
 
     # parse commandline options
     parser = OptionParser(version=__version__)
-    parser.add_option('-c', '--config', default=default_config,
-            help='default: %default', metavar='FILE')
-    parser.add_option('-d', '--detach', action='store_true', default=False,
-            help='detach when run')
-    parser.add_option('-p', '--protocol',
+    parser.add_option(
+            '-c', '--config', metavar='<file>', default=default_config,
+            help='config file (%default)')
+    parser.add_option(
+            '-d', '--detach', default=False, action='store_true',
+            help='run process in background')
+    parser.add_option(
+            '-p', '--protocol', metavar='<irc|aim|silc|cli>',
             help='force the use of this output protocol')
-    parser.add_option('-D', '--debug', dest='loglevel', action='store_const',
-            const=log.DEBUG,help='turn on debugging output')
-    parser.add_option('-v', '--verbose', dest='loglevel', action='store_const',
-            const=log.INFO, help='increase logging output')
-    parser.add_option('-q', '--quiet', dest='loglevel', action='store_const',
-            const=log.WARN, help='only show errors')
-    parser.add_option('-P', '--pidfile', metavar='<file>',
+    parser.add_option(
+            '-D', '--debug', dest='loglevel', action='store_const',
+            const=log.DEBUG, help='show debug messages')
+    parser.add_option(
+            '-v', '--verbose', dest='loglevel', action='store_const',
+            const=log.INFO, help='show info messages')
+    parser.add_option(
+            '-q', '--quiet', dest='loglevel', action='store_const',
+            const=log.WARN, help='only show error messages')
+    parser.add_option(
+            '-P', '--pidfile', metavar='<file>',
             help='override pidfile')
-    opts = parser.parse_args()[0]
+    opts, args = parser.parse_args()
+
+    if args:
+        parser.error('invalid args')
 
     # read config file
     sample_config = default_config + '-sample'
     if not os.path.exists(opts.config):
         if opts.config == default_config:
             shutil.copyfile(sample_config, opts.config)
-            err = 'created config %s - edit and rerun' % CONFIG
-            print >> sys.stderr, err
+            print('created config %s - edit and rerun' % CONFIG,
+                  file=sys.stderr)
         else:
-            print >> sys.stderr, 'config not found: %s' % opts.config
+            print('config not found: ' + opts.config, file=sys.stderr)
         return 1
 
     try:
@@ -956,39 +946,34 @@ def main():
     except FileNotFound:
         sys.stderr.write('config file not found, see README\n')
         return 1
-    except Exception, exc:
-        sys.stderr.write('error parsing config: %s\n' % exc)
+    except Exception as error:
+        print('error parsing config: %s' % error, file=sys.stderr)
         return 1
 
     try:
         check_config(config, sample_config, prefix)
-    except ConfigError, err:
-        print >> sys.stderr, '%s is missing required settings, check %s' % \
-            (os.path.basename(opts.config), os.path.basename(sample_config))
-        print >> sys.stderr, err
+    except ConfigError as error:
+        print('%s is missing required settings, check %s' % (
+            os.path.basename(opts.config), os.path.basename(sample_config)),
+            file=sys.stderr)
+        print(error, file=sys.stderr)
         return 1
 
     # init log facility
     try:
         loglevel = getattr(log, config.main.loglevel)
-    except:
-        loglevel = LOGLEVEL
+    except AttributeError:
+        loglevel = LOG['level']
     if opts.loglevel is not None:
         loglevel = opts.loglevel
-    log.basicConfig(level=loglevel, format=LOGFORMAT)
+    log.root.setLevel(loglevel)
 
     # if specified, log to file as well
-    try:
-        logfile = config.main.logfile
-        if logfile is not None and len(logfile):
-            handler = log.FileHandler(filename=logfile)
-            handler.setLevel(opts.loglevel)
-            formatter = log.Formatter(LOGFORMAT)
-            handler.setFormatter(formatter)
-            log.getLogger('').addHandler(handler)
-    except Exception, exc:
-        log.warn('unable to log to file: %s' % exc)
-        log.exception(exc)
+    if config.main.logfile:
+        handler = log.FileHandler(config.main.logfile)
+        handler.setFormatter(log.Formatter(LOG['format'], LOG['datefmt']))
+        log.root.addHandler(handler)
+        log.info('logging to file: ' + config.main.logfile)
 
     # load specified protocol
     if opts.protocol:
@@ -1000,7 +985,7 @@ def main():
     # daemonize if requested
     if config.main.detach or opts.detach:
         detach()
-    
+
     # determine pidfile to use (commandline overrides config)
     if opts.pidfile:
         pidfile = opts.pidfile
@@ -1013,17 +998,16 @@ def main():
             log.warn('removing stale pidfile: %s' % pidfile)
             os.remove(pidfile)
         try:
-            pid_fo = open(pidfile, 'wb')
-            try:
-                pid_fo.write(str(os.getpid()))
-            finally:
-                pid_fo.close()
-        except Exception, exc:
-            log.warn('filed to write %s: %s' % pidfile)
-            log.exception(exc)
+            with open(pidfile, 'w') as file:
+                file.write(str(os.getpid()))
+        except Exception as error:
+            log.warn('filed to write %s: %s' % (pidfile, error))
+            log.exception(error)
 
     # setup global UserAgent
-    ua.setup(config.http.agent, config.http.cookies, [], config.http.timeout)
+    # handlers=None, cookies=True, agent=_agent, timeout=None
+    useragent.setup(cookies=config.http.cookies, agent=config.http.agent,
+                    timeout=config.http.timeout)
 
     # run bot
     try:
@@ -1031,21 +1015,21 @@ def main():
         bot = getattr(bot, 'ProtocolHandler')
         bot = bot(config, prefix)
         bot.start()
-    except Exception, exc:
-        log.exception(exc)
+    except Exception as error:
+        log.exception(error)
 
     if pidfile and os.path.exists(pidfile):
         log.info('removing pidfile')
         try:
             os.remove(pidfile)
-        except Exception, exc:
+        except Exception as error:
             log.warn('failed to remove pidfile %s' % pidfile)
-            log.exception(exc)
+            log.exception(error)
 
     try:
         bot.stop()
-    except Exception, exc:
-        log.exception(exc)
+    except Exception as error:
+        log.exception(error)
 
     log.info('madcow is exiting cleanly')
     return 0

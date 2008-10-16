@@ -20,7 +20,7 @@
 """Keep track of what people last said"""
 
 import re
-import anydbm
+import dbm
 import time
 import os
 from include.utils import Module
@@ -40,7 +40,7 @@ class Main(Module):
                 'data/db-%s-seen' % madcow.namespace)
 
     def dbm(self):
-        return anydbm.open(self.dbfile, 'c', 0640)
+        return dbm.open(self.dbfile, 'c', 0o640)
 
     def get(self, user):
         user = user.lower()
@@ -67,7 +67,7 @@ class Main(Module):
             if days: last = '%s day%s' % (days, 's' * (days != 1))
 
             return message, channel, last
-        except Exception, e:
+        except Exception as e:
             return None, None, None
 
     def set(self, nick, channel, message):
@@ -94,6 +94,6 @@ class Main(Module):
             return '%s: %s was last seen %s ago on %s saying "%s"' % (nick,
                     user, last, channel, message)
 
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)

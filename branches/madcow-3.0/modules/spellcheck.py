@@ -44,7 +44,7 @@ class Main(Module):
             else:
                 result = corrected
             return '%s: %s' % (nick, result)
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return '%s: %s' % (nick, self.error)

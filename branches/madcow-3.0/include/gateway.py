@@ -20,26 +20,26 @@
 from threading import Thread
 import os
 from select import select
-from utils import Error, Request
+from .utils import Request
 import re
 import socket
 import logging as log
 import datetime
-from urlparse import urljoin
+from urllib.parse import urljoin
 
-class InvalidPayload(Error):
+class InvalidPayload(Exception):
     """Raised when invalid payload is received by gateway"""
 
 
-class CloseConnection(Error):
+class CloseConnection(Exception):
     """Raised to indicate gateway service should shut down connection"""
 
 
-class ConnectionTimeout(Error):
+class ConnectionTimeout(Exception):
     """Raised when connection times out on read/write"""
 
 
-class ConnectionClosed(Error):
+class ConnectionClosed(Exception):
     """Raised when client closes their end"""
 
 
@@ -111,7 +111,7 @@ class GatewayServiceHandler(Thread):
                 data = self.recv(size)
                 self.data_received(data)
                 continue
-            except InvalidPayload, msg:
+            except InvalidPayload as msg:
                 log.info('invalid payload from %s: %s' % (self.addr, msg))
             except CloseConnection:
                 log.info('closing connection to %s' % repr(self.addr))
@@ -119,7 +119,7 @@ class GatewayServiceHandler(Thread):
                 log.info('connection timeout to %s' % repr(self.addr))
             except ConnectionClosed:
                 log.info('connection closed by %s' % repr(self.addr))
-            except Exception, msg:
+            except Exception as msg:
                 log.warn('uncaught exception from %s: %s' % (self.addr, msg))
             break
         self.client.close()
@@ -143,12 +143,10 @@ class GatewayServiceHandler(Thread):
                 else:
                     content_type = 'message'
                 if content_type not in self.required_headers:
-                    raise InvalidPayload, \
-                        'unknown content type: ' % content_type
+                    raise InvalidPayload('unknown content type: ' % content_type)
                 for header in self.required_headers[content_type]:
                     if header not in hdrs:
-                        raise InvalidPayload, \
-                            'missing required field %s' + header
+                        raise InvalidPayload('missing required field %s' + header)
                 if 'size' in hdrs:
                     hdrs['size'] = int(hdrs['size'])
 
@@ -156,8 +154,8 @@ class GatewayServiceHandler(Thread):
                 self.content_type = content_type
                 self.hdrs = hdrs
                 self.headers_done = True
-            except Exception, msg:
-                raise InvalidPayload, 'invalid payload: %s' % msg
+            except Exception as msg:
+                raise InvalidPayload('invalid payload: %s' % msg)
 
         if self.content_type == 'image':
             if len(self.buf) < self.hdrs['size']:
@@ -172,7 +170,7 @@ class GatewayServiceHandler(Thread):
         # see if we can reverse lookup sender
         modules = self.server.bot.modules.dict()
         dbm = modules['learn'].get_db('email')
-        for user, email in dbm.items():
+        for user, email in list(dbm.ndbm.items()):
             if payload['from'] == email:
                 payload['from'] = user
                 break
@@ -188,16 +186,16 @@ class GatewayServiceHandler(Thread):
 
     def save_image(self, image, payload):
         if not self.isjpeg(image):
-            print repr(image[:20])
-            raise InvalidPayload, 'payload is not a JPEG image'
+            print(repr(image[:20]))
+            raise InvalidPayload('payload is not a JPEG image')
         imagepath = self.server.bot.config.gateway.imagepath
         baseurl = self.server.bot.config.gateway.imageurl
         if not imagepath or not baseurl:
-            raise InvalidPayload, 'images are not configured'
+            raise InvalidPayload('images are not configured')
 
         nick = self.safenick.sub('', payload['from'])[:16].lower()
         if not len(nick):
-            raise InvalidPayload, 'invalid nick'
+            raise InvalidPayload('invalid nick')
 
         date = datetime.date.today().strftime('%Y-%m-%d')
         basename = '%s_%s' % (nick, date)

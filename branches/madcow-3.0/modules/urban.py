@@ -60,7 +60,7 @@ class Main(Module):
             response = stripHTML(response)
             return response.encode("utf-8")
 
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return "%s: Serious problems: %s" % (nick, e)

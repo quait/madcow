@@ -80,7 +80,7 @@ class IRCProtocol(Madcow):
                 self.irc.process_once(0.2)
             except KeyboardInterrupt:
                 self.running = False
-            except Exception, e:
+            except Exception as e:
                 log.error('Error in IRC loop')
                 log.exception(e)
 
@@ -136,7 +136,7 @@ class IRCProtocol(Madcow):
 
         # color output if requested
         if req.colorize:
-            style = random.choice(self.colorlib._rainbow_map.keys())
+            style = random.choice(list(self.colorlib._rainbow_map.keys()))
             message = self.colorlib.rainbow(message, style=style)
 
         # MUST wrap if unset because irc will boot you for exceeding maxlen

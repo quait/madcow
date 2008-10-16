@@ -58,7 +58,7 @@ def mkzip():
     p.stdin.write(pyclist)
     p.stdin.close()
     p.wait()
-    print 'done'
+    print('done')
 
 def mkbin():
     data = _zipheader + slurp('madcow.zip')
@@ -67,14 +67,14 @@ def mkbin():
         fi.write(data)
     finally:
         fi.close()
-    os.chmod('madcow', 0755)
+    os.chmod('madcow', 0o755)
 
 def fix_modules():
     lines = []
     for subdir in ('modules', 'periodic',):
         dir = os.path.join(_prefix, subdir)
-        basedir, subdirs, filenames = os.walk(dir).next()
-        filenames = filter(lambda x: x.endswith('.py'), filenames)
+        basedir, subdirs, filenames = next(os.walk(dir))
+        filenames = [x for x in filenames if x.endswith('.py')]
         line = '_static_%s = %s' % (subdir, repr(filenames))
         lines.append(line)
     return lines
@@ -88,7 +88,7 @@ def slurp(filename):
 
 def add_statics():
     statics = []
-    for varname, filename in _statics.items():
+    for varname, filename in list(_statics.items()):
         statics.append('%s = %s' % (varname, repr(slurp(filename))))
     statics += fix_modules()
     mfile = os.path.join(_prefix, 'madcow.py')
@@ -157,8 +157,8 @@ def compile():
             name = '.'.join(parts)
             try:
                 __import__(name, globals(), locals(), [])
-            except Exception, e:
-                print "couldn't import %s: %s" % (name, e)
+            except Exception as e:
+                print("couldn't import %s: %s" % (name, e))
 
 def main():
     add_statics()

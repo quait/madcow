@@ -21,7 +21,7 @@
 
 from include.utils import Module
 import re
-from learn import Main as Learn
+from .learn import Main as Learn
 import logging as log
 
 __version__ = '0.1'
@@ -102,7 +102,7 @@ class Main(Module):
             kr = self.karma.process(nick, input)
             kwargs['req'].matched = kr.matched
             return kr.reply
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return '%s: problem with command: %s' % (nick, e)

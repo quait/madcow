@@ -22,7 +22,7 @@
 import re
 from include.utils import Module, stripHTML
 from include.useragent import geturl
-from urlparse import urljoin
+from urllib.parse import urljoin
 import logging as log
 
 class Main(Module):
@@ -48,7 +48,7 @@ class Main(Module):
             response = stripHTML(response)
             response = response.strip()
             return response[:self.max]
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return "%s: God didn't like that." % nick

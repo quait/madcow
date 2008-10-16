@@ -39,7 +39,7 @@ class Main(Module):
         try:
             query = args[0]
             return '%s: %s = %s' % (nick, query, self.google.lucky(query))
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return '%s: Not so lucky today..' % nick

@@ -80,7 +80,7 @@ try:
     timeoutsocket.setDefaultSocketTimeout(10)
 except ImportError:
     pass
-import cgi, re, sgmllib, string, StringIO, urllib, gzip
+import cgi, re, sgmllib, string, io, urllib.request, urllib.parse, urllib.error, gzip
 sgmllib.tagfind = re.compile('[a-zA-Z][-_.:a-zA-Z0-9]*')
 
 USER_AGENT = "UltraLiberalRSSParser/%s +http://diveintomark.org/projects/rss_parser/" % __version__
@@ -131,7 +131,7 @@ class RSSParser(sgmllib.SGMLParser):
         for prefix, value in attrs:
             if not prefix.startswith("xmlns:"): continue
             prefix = prefix[6:]
-            if prefix.find('backend.userland.com/rss') <> -1:
+            if prefix.find('backend.userland.com/rss') != -1:
                 # match any backend.userland.com namespace
                 prefix = 'http://backend.userland.com/rss'
             if value in self.namespaces:
@@ -139,7 +139,7 @@ class RSSParser(sgmllib.SGMLParser):
 
     def _mapToStandardPrefix(self, name):
         colonpos = name.find(':')
-        if colonpos <> -1:
+        if colonpos != -1:
             prefix = name[:colonpos]
             suffix = name[colonpos+1:]
             prefix = self.namespacemap.get(prefix, prefix)
@@ -255,7 +255,7 @@ class RSSParser(sgmllib.SGMLParser):
     def unknown_starttag(self, tag, attrs):
         self._addNamespaces(attrs)
         colonpos = tag.find(':')
-        if colonpos <> -1:
+        if colonpos != -1:
             prefix = tag[:colonpos]
             suffix = tag[colonpos+1:]
             prefix = self.namespacemap.get(prefix, prefix)
@@ -271,7 +271,7 @@ class RSSParser(sgmllib.SGMLParser):
 
     def unknown_endtag(self, tag):
         colonpos = tag.find(':')
-        if colonpos <> -1:
+        if colonpos != -1:
             prefix = tag[:colonpos]
             suffix = tag[colonpos+1:]
             prefix = self.namespacemap.get(prefix, prefix)
@@ -383,8 +383,8 @@ def open_resource(source, etag=None, modified=None, agent=None, referrer=None):
         
     # try to open with urllib2 (to use optional headers)
     try:
-        import urllib2
-        request = urllib2.Request(source)
+        import urllib.request, urllib.error
+        request = urllib.request.Request(source)
         if etag:
             request.add_header("If-None-Match", etag)
         if modified:
@@ -395,11 +395,11 @@ def open_resource(source, etag=None, modified=None, agent=None, referrer=None):
             request.add_header("Referer", referrer)
         request.add_header("Accept-encoding", "gzip")
         try:
-            return urllib2.urlopen(request)
-        except urllib2.HTTPError:
+            return urllib.request.urlopen(request)
+        except urllib.error.HTTPError:
             # either the resource is not modified or some other HTTP
             # error occurred so return an empty resource
-            return StringIO.StringIO("")
+            return io.StringIO("")
         except:
             # source must not be a valid URL but it might be a valid filename
             pass
@@ -420,7 +420,7 @@ def open_resource(source, etag=None, modified=None, agent=None, referrer=None):
         pass
 
     # treat source as string
-    return StringIO.StringIO(str(source))
+    return io.StringIO(str(source))
 
 def get_etag(resource):
     """
@@ -516,7 +516,7 @@ def parse(uri, etag=None, modified=None, agent=None, referrer=None):
     if hasattr(f, "headers"):
         if f.headers.get('content-encoding', None) == 'gzip':
             try:
-                data = gzip.GzipFile(fileobj=StringIO.StringIO(data)).read()
+                data = gzip.GzipFile(fileobj=io.StringIO(data)).read()
             except:
                 # ugh
                 data = ''
@@ -548,10 +548,10 @@ if __name__ == '__main__':
         urls = TEST_SUITE
     from pprint import pprint
     for url in urls:
-        print url
-        print
+        print(url)
+        print()
         result = parse(url)
         pprint(result['channel'])
         if result['items']:
             pprint(result['items'][0])
-        print
+        print()

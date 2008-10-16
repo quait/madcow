@@ -76,7 +76,7 @@ class Shell(object):
                 for poll in self.polls:
                     poll()
                 if stdin in select([stdin], [], [], 0.1)[0]:
-                    ch = os.read(stdin, 1)
+                    ch = os.read(stdin, 1).decode('utf8')
                 else:
                     ch = ''
                 if ch is not None and not len(ch):
@@ -143,7 +143,7 @@ def main():
         input = sh.readline(prompt)
         if input == 'quit':
             break
-        print 'got: %s' % repr(input)
+        print('got: %s' % repr(input))
 
 if __name__ == '__main__':
     sys.exit(main())

@@ -24,7 +24,7 @@ import logging as log
 import re
 from re import I
 import os
-import anydbm
+import dbm
 import random
 
 __version__ = '0.1'
@@ -183,18 +183,18 @@ class Factoids(object):
     def get_dbm(self, dbname):
         dbfile = 'db-%s-%s' % (self.parent.madcow.namespace, dbname.lower())
         dbfile = os.path.join(self.parent.madcow.prefix, 'data', dbfile)
-        return anydbm.open(dbfile, 'c', 0640)
+        return dbm.open(dbfile, 'c', 0o640)
 
     def get(self, dbname, key):
         dbm = self.get_dbm(dbname)
-        val = dbm.get(key.lower())
-        dbm.close()
+        val = dbm.ndbm.get(key.lower())
+        dbm.ndbm.close()
         return val
 
     def set(self, dbname, key, val):
         dbm = self.get_dbm(dbname)
         dbm[key.lower()] = val
-        dbm.close()
+        dbm.ndbm.close()
 
     def unset(self, dbname, key):
         dbm = self.get_dbm(dbname)
@@ -203,7 +203,7 @@ class Factoids(object):
             del dbm[key.lower()]
             forgot = True
         finally:
-            dbm.close()
+            dbm.ndbm.close()
         return forgot
 
     def parse(self, message, nick, req):
@@ -477,7 +477,7 @@ class Main(Module):
     def response(self, nick, args, kwargs):
         try:
             return self.factoids.parse(args[0], nick, kwargs['req'])
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)
             return '%s: %s' % (nick, self.error)

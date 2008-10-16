@@ -2,7 +2,7 @@
 
 import sys
 import MySQLdb
-import urlparse
+import urllib.parse
 import cgi
 
 """Quick, nasty cgi hack to check whether a meme is safe to post or not
@@ -52,7 +52,7 @@ def clean_url(url):
     except:
         query = ''
     fragment = ''
-    return urlparse.urlunsplit([scheme, netloc, url, query, fragment])
+    return urllib.parse.urlunsplit([scheme, netloc, url, query, fragment])
 
 
 def memecheck(url):
@@ -71,10 +71,10 @@ def main():
     sys.stdout.write('Content-Type: text/html\r\n\r\n')
     try:
         url = cgi.FieldStorage()['url'].value
-        print url + '<hr/>'
-        print memecheck(url)
+        print(url + '<hr/>')
+        print(memecheck(url))
     except:
-        print 'missing url?'
+        print('missing url?')
 
     return 0
 

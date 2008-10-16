@@ -17,10 +17,10 @@
 
 """Google interface"""
 
-import urllib2
-from utils import Error, stripHTML
-from useragent import UserAgent
-from urlparse import urljoin
+import urllib.request, urllib.error
+from .utils import Error, stripHTML
+from .useragent import UserAgent
+from urllib.parse import urljoin
 import re
 
 __version__ = '0.1'
@@ -39,18 +39,18 @@ class Response(object):
         return self.data
 
 
-class NoRedirects(urllib2.HTTPRedirectHandler):
+class NoRedirects(urllib.request.HTTPRedirectHandler):
     """Override auto-follow of redirects"""
 
     def redirect_request(self, *args, **kwargs):
         pass
 
 
-class NoErrors(urllib2.HTTPDefaultErrorHandler):    
+class NoErrors(urllib.request.HTTPDefaultErrorHandler):    
     """Don't allow urllib to throw an error on 30x code"""
 
     def http_error_default(self, req, fp, code, msg, headers): 
-        return Response(data=dict(headers.items())['location'])
+        return Response(data=dict(list(headers.items()))['location'])
 
 
 class Google(object):
@@ -68,7 +68,7 @@ class Google(object):
         self.ua = UserAgent(handlers=[NoRedirects, NoErrors])
 
     def lucky(self, query):
-        opts = dict(self.luckyopts.items())
+        opts = dict(list(self.luckyopts.items()))
         opts['q'] = query
         result = self.ua.openurl(self.search, opts=opts, referer=self.baseurl,
                 size=1024)
@@ -92,7 +92,7 @@ class Google(object):
         opts['q'] = query
         doc = self.ua.openurl(self.search, opts=opts)
         if not self.reConversionDetected.search(doc):
-            raise Exception, 'no conversion detected'
+            raise Exception('no conversion detected')
         response = self.reConversionResult.search(doc).group(1)
         response = stripHTML(response)
         return response

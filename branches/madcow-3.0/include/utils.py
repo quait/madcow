@@ -20,11 +20,10 @@
 """Some helper functions"""
 
 import re
-import urllib, urllib2, cookielib
+import urllib, urllib.request, urllib.error, http.cookiejar
 import sys
 from time import time as unix_time
 import os
-from types import StringTypes
 
 __version__ = '0.2'
 __author__ = 'cj_ <cjones@gruntle.org>'
@@ -102,21 +101,6 @@ class Module(object):
         return 'not implemented'
 
 
-class Error(Exception):
-    """Base Exception class"""
-
-    def __init__(self, msg=''):
-        self.msg = msg
-        Exception.__init__(self)
-
-    def __str__(self):
-        if isinstance(self.msg, StringTypes):
-            return str(self.msg)
-        return str(repr(self.msg))
-
-    __repr__ = __str__
-
-
 class Request(object):
     """Generic object passed in from protocol handlers for processing"""
 
@@ -147,7 +131,7 @@ class cache(object):
             now = unix_time()
 
             # expire cache values that have aged beyond timeout
-            for key, item in self.cached.items():
+            for key, item in list(self.cached.items()):
                 if (now - item['created']) > self.timeout:
                     del self.cached[key]
 
@@ -254,8 +238,8 @@ def test_module(mod):
     try:
         args = main.pattern.search(' '.join(sys.argv[1:])).groups()
     except:
-        print 'no match, double-check regex'
+        print('no match, double-check regex')
         return 1
-    print main.response(nick=os.environ['USER'], args=args, kwargs={})
+    print(main.response(nick=os.environ['USER'], args=args, kwargs={}))
     return 0
 

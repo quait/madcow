@@ -21,7 +21,7 @@
 
 import re
 import os
-import urlparse
+import urllib.parse
 import datetime
 from sqlobject import *
 import random
@@ -115,7 +115,7 @@ class Main(Module):
             uri += '%s@%s/%s' % (user, host, config.db_name)
         try:
             sqlhub.processConnection = connectionForURI(uri)
-        except Exception, e:
+        except Exception as e:
             log.warn('invalid uri: %s (%s)' % (uri, e))
             self.enabled = False
             return
@@ -177,7 +177,7 @@ class Main(Module):
         # ignore fragments
         fragment = ''
 
-        return urlparse.urlunsplit([scheme, netloc, url, query, fragment])
+        return urllib.parse.urlunsplit([scheme, netloc, url, query, fragment])
 
     def getScoreForAuthor(self, a):
         return a.pointsNew + (a.pointsOld  * -2) + (a.pointsCredit * 2)
@@ -300,6 +300,6 @@ class Main(Module):
 
             me.pointsNew = me.pointsNew + 1
 
-        except Exception, e:
+        except Exception as e:
             log.warn('error in %s: %s' % (self.__module__, e))
             log.exception(e)

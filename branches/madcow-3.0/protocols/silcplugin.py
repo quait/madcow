@@ -55,7 +55,7 @@ class SilcPlugin(madcow.Madcow, silc.SilcClient):
         self.run_one()
       except KeyboardInterrupt:
         self.running = False
-      except Exception, e:
+      except Exception as e:
         log.error('exception caught in silc loop')
         log.exception(e)
       time.sleep(0.2)

@@ -56,7 +56,7 @@ class Main(object):
     try:
       log.debug('getting tweets...')
       tweets = self.api.GetFriendsTimeline(since=self.__get_update_str())
-    except Exception, e:
+    except Exception as e:
       try:
         if e.code == 304:
           log.debug('no new tweets')
@@ -72,7 +72,7 @@ class Main(object):
     
     for t in reversed(tweets):
       if time.localtime(t.GetCreatedAtInSeconds()) < self.lastupdate: # twitter fails sometimes, so we do our own filter..
-        print "ignoring old tweet with timestamp %s (TWITTER SUCKS)" % t.created_at
+        print("ignoring old tweet with timestamp %s (TWITTER SUCKS)" % t.created_at)
         continue
       
       line = ">> tweet from %s: %s <<" % (t.user.screen_name, stripHTML(t.text))
