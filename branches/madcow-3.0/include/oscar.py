@@ -22,7 +22,7 @@ from threading import Thread
 from select import select
 import os
 import struct
-import md5
+from hashlib import md5
 import string
 import random
 import types
@@ -1036,9 +1036,9 @@ def readTLVs(data,count=None):
     return dict,data
 
 def encryptPasswordMD5(password,key):
-    m=md5.new()
+    m=md5()
     m.update(key)
-    m.update(md5.new(password).digest())
+    m.update(md5(password).digest())
     m.update("AOL Instant Messenger (SM)")
     return m.digest()
 
