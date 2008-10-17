@@ -483,7 +483,7 @@ class ServerConnection(Connection):
         """[Internal]"""
 
         try:
-            new_data = self.transport.read(2**14)
+            new_data = self.transport.recv(2**14)
         except socket.error as x:
             # The server hung up.
             self.disconnect("Connection reset by peer")
@@ -493,6 +493,7 @@ class ServerConnection(Connection):
             self.disconnect("Connection reset by peer")
             return
 
+        new_data = str(new_data, 'raw-unicode-escape')
         lines = _linesep_regexp.split(self.previous_buffer + new_data)
 
         # Save the last, unfinished line.
@@ -781,10 +782,11 @@ class ServerConnection(Connection):
 
         The string will be padded with appropriate CR LF.
         """
+        string = bytes(string, 'raw-unicode-escape')
         if self.socket is None:
             raise ServerNotConnectedError("Not connected.")
         try:
-            self.transport.write(string + "\r\n")
+            self.transport.send(string + b"\r\n")
             if DEBUG:
                 print("TO SERVER:", string)
         except socket.error as x:
@@ -953,7 +955,7 @@ class DCCConnection(Connection):
             return
 
         try:
-            new_data = self.transport.read(2**14)
+            new_data = self.transport.recv(2**14)
         except socket.error as x:
             # The server hung up.
             self.disconnect("Connection reset by peer")
@@ -1002,10 +1004,11 @@ class DCCConnection(Connection):
         The string will be padded with appropriate LF if it's a DCC
         CHAT session.
         """
+        string = bytes(string, 'raw-unicode-escape')
         try:
-            self.transport.write(string)
+            self.transport.send(string)
             if self.dcctype == "chat":
-                self.transport.write("\n")
+                self.transport.send(b"\n")
             if DEBUG:
                 print("TO PEER: %s\n" % string)
         except socket.error as x:
@@ -1177,8 +1180,9 @@ def mask_matches(nick, mask):
 
 _special = "-[]\\`^{}"
 nick_characters = string.ascii_letters + string.digits + _special
-_ircstring_translation = string.maketrans(string.ascii_uppercase + "[]\\^",
-                                          string.ascii_lowercase + "{}|~")
+_ircstring_translation = string.maketrans(
+        bytes(string.ascii_uppercase, 'ascii') + b"[]\\^",
+        bytes(string.ascii_lowercase, 'ascii') + b"{}|~")
 
 def irc_lower(s):
     """Returns a lowercased string.
