@@ -1,85 +1,57 @@
-#!/usr/bin/env py3
-#
-# Copyright (C) 2007-2008 Chris Jones
-#
-# This file is part of Madcow.
-#
-# Madcow is free software: you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by the
-# Free Software Foundation, either version 3 of the License, or (at your
-# option) any later version.
-#
-# Madcow is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-# for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with Madcow.  If not, see <http://www.gnu.org/licenses/>.
+#!/home/cjones/local/bin/py3
 
-"""Library to mimic a browser"""
-
-import urllib.request
-import urllib.parse
-from io import StringIO
+import sys
+from urllib.request import HTTPCookieProcessor, build_opener, Request
+from urllib.parse import urlparse, urlencode, urlunparse
+import logging as log
 
 _ua = None
 
 class UserAgent:
 
-    """Mimics a browser"""
-
     _agent = 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)'
-    _blocksize = 1024
+    _blocksize = 8 * 1024
 
-    def __init__(self, handlers=None, cookies=True, agent=_agent, timeout=None):
-        self.timeout = timeout
+    def __init__(self, handlers=None, timeout=None):
         if handlers is None:
             handlers = []
-        if cookies:
-            handlers.append(urllib.request.HTTPCookieProcessor)
-        self.opener = urllib.request.build_opener(*handlers)
-        self.opener.addheaders = [('User-Agent', agent)]
+        handlers.append(HTTPCookieProcessor)
+        self.opener = build_opener(*handlers)
+        self.opener.addheaders = [('User-Agent', self._agent)]
+        self.timeout = timeout
 
-    def open(self, url, referer=None, opts=None, data=None, file=None, size=0):
-        """Open URL"""
+    def open(self, url, opts=None, size=0):
+        url = list(urlparse(url))
         if opts:
-            uri = list(urllib.parse.urlparse(url))
-            uri[4] = '&'.join([uri[4], urllib.parse.urlencode(opts)])
-            url = urllib.parse.urlunparse(uri)
-        request = urllib.request.Request(url, data, self.timeout)
-        if referer:
-            request.add_header('Referer', referer)
-        response = self.opener.open(request)
-        if not file:
-            file = StringIO()
+            url[4] = '&'.join(filter(lambda x: x, [url[4], urlencode(opts)]))
+        request = Request(urlunparse(url))
+        request.add_header('Referer', '%s://%s/' % (url[0], url[1]))
+        log.debug('reading ' + request.get_full_url())
+        response = self.opener.open(request, timeout=self.timeout)
         blocksize = self._blocksize
-        read = 0
+        data = b''
         while not response.fp.closed:
-            if size and read + blocksize > size:
-                blocksize = size - read
-            block = response.read(blocksize).decode('utf8')
-            read += len(block)
+            if size and len(data) + blocksize > size:
+                blocksize = size - len(data)
+            block = response.read(blocksize)
             if not block:
                 break
-            file.write(block)
-            if size and read >= size:
+            data += block
+            if size and len(data) >= size:
                 break
-        if isinstance(file, StringIO):
-            return file.getvalue()
+        return data.decode('raw-unicode-escape')
 
 
-def setup(*args, **kwargs):
-    global _ua
-    _ua = UserAgent(*args, **kwargs)
-
-
-def getua():
+def get_agent():
     global _ua
     if _ua is None:
         _ua = UserAgent()
     return _ua
 
+def setup(*args, **kwargs):
+    global _ua
+    _ua = UserAgent(*args, **kwargs)
 
 def geturl(*args, **kwargs):
-    return getua().open(*args, **kwargs)
+    return get_agent().open(*args, **kwargs)
+

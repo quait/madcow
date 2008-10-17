@@ -43,7 +43,6 @@ __author__ = 'cj_ <cjones@gruntle.org>'
 __all__ = ['Request', 'Madcow', 'Config']
 
 MADCOW_URL = 'http://code.google.com/p/madcow/'
-CHARSET = 'latin1'
 CONFIG = 'madcow.ini'
 SAMPLE_HASH = 'b1dd42c276abdf59f5f494dd7dbbb714'
 LOG = dict(level=log.INFO, stream=sys.stderr, datefmt='%x %X',
@@ -83,12 +82,6 @@ class Madcow:
 
         # create admin instance
         self.admin = Admin(self)
-
-        # set encoding
-        if self.config.main.charset:
-            self.charset = self.config.main.charset
-        else:
-            self.charset = CHARSET
 
         # load modules
         self.modules = Modules(self, 'modules', self.prefix)
@@ -1005,9 +998,7 @@ def main():
             log.exception(error)
 
     # setup global UserAgent
-    # handlers=None, cookies=True, agent=_agent, timeout=None
-    useragent.setup(cookies=config.http.cookies, agent=config.http.agent,
-                    timeout=config.http.timeout)
+    useragent.setup(timeout=config.http.timeout)
 
     # run bot
     try:

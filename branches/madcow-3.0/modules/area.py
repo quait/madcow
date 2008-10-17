@@ -26,12 +26,14 @@ from urllib.parse import urljoin
 import logging as log
 
 class Main(Module):
+
     pattern = re.compile('^\s*area(?:\s+code)?\s+(\d+)\s*', re.I)
     require_addressing = True
     help = 'area <areacode> - what city does it belong to'
     baseurl = 'http://www.melissadata.com/'
     searchurl = urljoin(baseurl, '/lookups/phonelocation.asp')
-    city = re.compile(r'<tr><td><A[^>]+>(.*?)</a></td><td>(.*?)</td><td align=center>\d+</td></tr>')
+    city = re.compile(r'<tr><td><A[^>]+>(.*?)</a></td><td>(.*?)</td><td align'
+                      r'=center>\d+</td></tr>')
 
     def response(self, nick, args, kwargs):
         try:
