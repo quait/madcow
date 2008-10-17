@@ -18,7 +18,6 @@ import time
 import urllib.request, urllib.parse, urllib.error
 import urllib.request, urllib.error
 import urllib.parse
-from . import twitter
 
 class TwitterError(Exception):
   '''Base class for Twitter errors'''

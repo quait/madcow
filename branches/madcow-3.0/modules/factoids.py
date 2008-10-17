@@ -185,25 +185,36 @@ class Factoids:
         dbfile = os.path.join(self.parent.madcow.prefix, 'data', dbfile)
         return dbm.open(dbfile, 'c', 0o640)
 
+    @staticmethod
+    def _make_key(key):
+        key = key.lower()
+        key = bytes(key, 'raw-unicode-escape')
+        return key
+
     def get(self, dbname, key):
         dbm = self.get_dbm(dbname)
-        val = dbm.ndbm.get(key.lower())
-        dbm.ndbm.close()
-        return val
+        key = self._make_key(key)
+        if key in dbm:
+            val = dbm[key]
+        else:
+            val = None
+        dbm.close()
+        if val and isinstance(val, bytes):
+            return str(val, 'raw-unicode-escape')
 
     def set(self, dbname, key, val):
         dbm = self.get_dbm(dbname)
-        dbm[key.lower()] = val
-        dbm.ndbm.close()
+        dbm[self._make_key(key)] = val
+        dbm.close()
 
     def unset(self, dbname, key):
         dbm = self.get_dbm(dbname)
         forgot = False
         try:
-            del dbm[key.lower()]
+            del dbm[self._make_key(key)]
             forgot = True
         finally:
-            dbm.ndbm.close()
+            dbm.close()
         return forgot
 
     def parse(self, message, nick, req):

@@ -159,18 +159,17 @@ class Madcow:
 
     def handle_response(self, response, req=None):
         """encode output, lock threads, and call protocol_output"""
-        try:
-            self.lock.acquire()
+        with self.lock:
             try:
                 self.protocol_output(response, req)
             except Exception as error:
                 log.error('error in output: %s' % repr(response))
-                log.exception(exc)
-        finally:
-            self.lock.release()
+                log.exception(error)
 
     def protocol_output(self, message, req=None):
         """Override with protocol-specific output method"""
+        if not isinstance(message, str):
+            message = str(message, 'ascii', 'ignore')
         print(message)
 
     ### MODULE PROCESSING ###

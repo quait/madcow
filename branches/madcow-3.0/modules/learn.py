@@ -43,27 +43,36 @@ class Main(Module):
         dbfile = self.dbfile(db)
         return dbm.open(dbfile, 'c', 0o640)
 
+    @staticmethod
+    def _make_key(key):
+        if isinstance(key, str):
+            key = key.lower()
+            key = bytes(key, 'raw-unicode-escape')
+        return key
+
     def get_db(self, db):
         dbm = self.dbm(db)
         db = {}
-        for key in list(dbm.ndbm.keys()):
+        for key in list(dbm.keys()):
             db[key] = dbm[key]
-        dbm.ndbm.close()
+        dbm.close()
         return db
 
     def lookup(self, db, key):
         dbm = self.dbm(db)
         try:
-            val = dbm[key.lower()]
-        except:
-            val = None
-        dbm.ndbm.close()
-        return val
+            key = self._make_key(key)
+            if key in dbm:
+                return str(dbm[self._make_key(key)], 'raw-unicode-escape')
+        finally:
+            dbm.close()
 
     def set(self, db, key, val):
         dbm = self.dbm(db)
-        dbm[key.lower()] = val
-        dbm.ndbm.close()
+        try:
+            dbm[self._make_key(key)] = val
+        finally:
+            dbm.close()
 
     def response(self, nick, args, kwargs):
         try:
@@ -72,7 +81,7 @@ class Main(Module):
                 return '%s: unknown database' % nick
             self.set(db, key, val)
             return '%s: set %s\'s %s to %s' % (nick, key, db, val)
-        except Exception as e:
-            log.warn('error in %s: %s' % (self.__module__, e))
-            log.exception(e)
+        except Exception as error:
+            log.warn('error in %s: %s' % (self.__module__, error))
+            log.exception(error)
             return "%s: couldn't set that" % nick

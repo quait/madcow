@@ -493,7 +493,8 @@ class ServerConnection(Connection):
             self.disconnect("Connection reset by peer")
             return
 
-        new_data = str(new_data, 'raw-unicode-escape')
+        if not isinstance(new_data, str):
+            new_data = str(new_data, 'raw-unicode-escape')
         lines = _linesep_regexp.split(self.previous_buffer + new_data)
 
         # Save the last, unfinished line.
@@ -782,7 +783,8 @@ class ServerConnection(Connection):
 
         The string will be padded with appropriate CR LF.
         """
-        string = bytes(string, 'raw-unicode-escape')
+        if not isinstance(string, bytes):
+            string = bytes(string, 'raw-unicode-escape')
         if self.socket is None:
             raise ServerNotConnectedError("Not connected.")
         try:
@@ -1004,7 +1006,8 @@ class DCCConnection(Connection):
         The string will be padded with appropriate LF if it's a DCC
         CHAT session.
         """
-        string = bytes(string, 'raw-unicode-escape')
+        if not isinstance(string, bytes):
+            string = bytes(string, 'raw-unicode-escape')
         try:
             self.transport.send(string)
             if self.dcctype == "chat":

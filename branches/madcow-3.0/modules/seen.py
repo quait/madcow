@@ -27,6 +27,7 @@ from include.utils import Module
 import logging as log
 
 class Main(Module):
+
     pattern = Module._any
     priority = 0
     terminate = False
@@ -43,12 +44,13 @@ class Main(Module):
         return dbm.open(self.dbfile, 'c', 0o640)
 
     def get(self, user):
-        user = user.lower()
+        user = bytes(user.lower(), 'raw-unicode-escape')
         db = self.dbm()
 
         try:
-            packed = db[user]
-            db.close()
+            if user not in db:
+                return None, None, None
+            packed = str(db[user], 'raw-unicode-escape')
             channel, last, message = packed.split('/', 2)
 
             seconds = int(time.time() - float(last))
@@ -56,24 +58,27 @@ class Main(Module):
 
             minutes = seconds / 60
             seconds = seconds % 60
-            if minutes: last = '%s minute%s' % (minutes, 's' * (minutes != 1))
+            if minutes:
+                last = '%s minute%s' % (minutes, 's' * (minutes != 1))
 
             hours = minutes / 60
             minutes = minutes % 60
-            if hours: last = '%s hour%s' % (hours, 's' * (hours != 1))
+            if hours:
+                last = '%s hour%s' % (hours, 's' * (hours != 1))
 
             days = hours / 24
             hours = hours % 24
-            if days: last = '%s day%s' % (days, 's' * (days != 1))
+            if days:
+                last = '%s day%s' % (days, 's' * (days != 1))
 
             return message, channel, last
-        except Exception as e:
-            return None, None, None
+        finally:
+            db.close()
 
     def set(self, nick, channel, message):
         packed = '%s/%s/%s' % (channel, time.time(), message)
         db = self.dbm()
-        db[nick.lower()] = packed
+        db[bytes(nick.lower(), 'raw-unicode-escape')] = packed
         db.close()
 
     def response(self, nick, args, kwargs):
@@ -94,6 +99,6 @@ class Main(Module):
             return '%s: %s was last seen %s ago on %s saying "%s"' % (nick,
                     user, last, channel, message)
 
-        except Exception as e:
-            log.warn('error in %s: %s' % (self.__module__, e))
-            log.exception(e)
+        except Exception as error:
+            log.warn('error in %s: %s' % (self.__module__, error))
+            log.exception(error)

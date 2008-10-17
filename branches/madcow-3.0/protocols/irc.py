@@ -126,12 +126,12 @@ class IRCProtocol(Madcow):
 
     def protocol_output(self, message, req=None):
         """output to IRC"""
-        if message is None:
+        if not message:
             return
 
         # IRC really doesn't like null characters
         message = message.replace('\x00', '')
-        if not len(message):
+        if not message:
             return
 
         # color output if requested
@@ -161,6 +161,10 @@ class IRCProtocol(Madcow):
         delta = unix_time() - self.last_response
         if delta < self.delay:
             sleep(self.delay - delta)
+        """ XXX
+        if not isinstance(line, bytes):
+            line = bytes(line, 'raw-unicode-escape')
+        """
         self.server.privmsg(sendto, line)
         self.last_response = unix_time()
 
@@ -174,10 +178,16 @@ class IRCProtocol(Madcow):
 
     def on_message(self, server, event, private):
         """process incoming messages"""
-        req = Request(message=event.arguments()[0])
+        message = event.arguments()[0]
+        """ XXX
+        if not isinstance(message, str):
+            message = str(message, 'raw-unicode-escape')
+        """
+        req = Request(message)
         req.nick = irclib.nm_to_n(event.source())
         req.channel = event.target()
         req.private = private
+
 
         if private:
             req.sendto = req.nick
