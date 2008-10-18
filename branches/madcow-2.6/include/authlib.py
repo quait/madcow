@@ -112,8 +112,7 @@ class AuthLib(object):
         return self.check(passwd[user]['password'], plain)
 
     def user_exists(self, user):
-        passwd = self.get_passwd()
-        return passwd.has_key(user)
+        return user in self.get_passwd()
 
     def get_flags(self, user):
         passwd = self.get_passwd()
