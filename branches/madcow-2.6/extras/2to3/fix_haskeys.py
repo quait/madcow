@@ -6,6 +6,7 @@ import sys
 import os
 import re
 from optparse import OptionParser
+import shutil
 
 _splitext_re = re.compile(r'^(.+)\.([^.]+)$')
 _haskey_re = re.compile(r'(if\s+(not\s+)?(\S+?)\.has_key\((.*?)\))')
@@ -18,7 +19,10 @@ def fix(path):
         if hasnot:
             new.insert(1, 'not')
         data = data.replace(match, ' '.join(new))
-    print data
+        shutil.copy(path, path + '.orig')
+        with open(path, 'wb') as file:
+            file.write(data)
+        print >> sys.stderr, 'fixed ' + path
 
 def walk(dir):
     for basedir, subdirs, filenames in os.walk(dir):
