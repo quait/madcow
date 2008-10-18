@@ -38,6 +38,8 @@ from include import useragent as ua
 from hashlib import md5
 from urlparse import urljoin
 from include import gateway
+from include import chardet
+import codecs
 
 __version__ = '1.4.1'
 __author__ = 'cj_ <cjones@gruntle.org>'
@@ -46,16 +48,15 @@ __all__ = ['Request', 'Madcow', 'Config']
 MADCOW_URL = 'http://code.google.com/p/madcow/'
 LOGFORMAT = '[%(asctime)s] %(levelname)s: %(message)s'
 LOGLEVEL = log.WARN
-CHARSET = 'latin1'
+CHARSET = 'utf-8'
 CONFIG = 'madcow.ini'
-SAMPLE_HASH = 'b1dd42c276abdf59f5f494dd7dbbb714'
+SAMPLE_HASH = 'baec6c21cc98f2807922b6b46af1cf20'
 
 class Madcow(object):
 
     """Core bot handler, subclassed by protocols"""
 
     _delim = re.compile(r'\s*[,;]\s*')
-    _codecs = ('ascii', 'utf8', 'latin1')
     _botname = 'madcow'
     re_cor1 = None
     re_addrend = None
@@ -86,10 +87,13 @@ class Madcow(object):
         self.admin = Admin(self)
 
         # set encoding
+        self.charset = CHARSET
         if self.config.main.charset:
-            self.charset = self.config.main.charset
-        else:
-            self.charset = CHARSET
+            try:
+                self.charset = codecs.lookup(self.config.main.charset).name
+            except LookupError:
+                log.warn('unknown charset %s, using default %s' % (
+                    self.config.main.charset, self.charset))
 
         # load modules
         self.modules = Modules(self, 'modules', self.prefix)
@@ -180,21 +184,10 @@ class Madcow(object):
 
     def encode(self, text):
         """Force output to the bots encoding if possible"""
-        if isinstance(text, StringTypes):
-            for charset in self._codecs:
-                try:
-                    text = unicode(text, charset)
-                    break
-                except:
-                    pass
-
-            if isinstance(text, StringType):
-                text = unicode(text, 'ascii', 'replace')
-        try:
-            text = text.encode(self.charset)
-        except:
-            text = text.encode('ascii', 'replace')
-        return text
+        charset = chardet.detect(text)['encoding']
+        decoder = codecs.lookup(charset)
+        text = decoder.decode(text, 'replace')[0]
+        return text.encode(self.charset, 'replace')
 
     def protocol_output(self, message, req=None):
         """Override with protocol-specific output method"""
