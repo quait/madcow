@@ -17,7 +17,7 @@ def fix(path):
     for match, hasnot, obj, key in _haskey_re.findall(data):
         new = ['if', key, 'in', obj]
         if hasnot:
-            new.insert(1, 'not')
+            new.insert(2, 'not')
         data = data.replace(match, ' '.join(new))
         shutil.copy(path, path + '.orig')
         with open(path, 'wb') as file:
