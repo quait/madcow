@@ -12,7 +12,7 @@ module=cli
 ;module=aim
 ;module=silcplugin
 ;
-; whether to daemonize when run (POSIX only). you can force the bot to
+; whether to daemonize when run (POSIX only).  you can force the bot to
 ; detach by specifying -d on the commandline.
 ;
 detach=no
