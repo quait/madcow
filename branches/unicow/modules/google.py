@@ -39,7 +39,7 @@ class Main(Module):
     def response(self, nick, args, kwargs):
         try:
             query = args[0]
-            return '%s: %s = %s' % (nick, query, self.google.lucky(query))
+            return u'%s: %s = %s' % (nick, query, self.google.lucky(query))
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)

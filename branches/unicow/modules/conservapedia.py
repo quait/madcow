@@ -45,7 +45,7 @@ class Main(Module):
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: problem with query: %s' % (nick, error)
+            return u'%s: problem with query: %s' % (nick, error)
 
 
 if __name__ == '__main__':

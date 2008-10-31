@@ -68,11 +68,11 @@ class Main(Module):
             output = [self.colorize('blue', *dem), self.colorize('red', *gop)]
             if tie:
                 output.append(self.colorize('white', *tie))
-            return '%s: %s' % (nick, ', '.join(output))
+            return u'%s: %s' % (nick, ', '.join(output))
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: %s' % (nick, error)
+            return u'%s: %s' % (nick, error)
 
 
 if __name__ == '__main__':

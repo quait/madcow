@@ -37,11 +37,11 @@ class Main(Module):
         try:
             query = args[0]
             response = self.google.calculator(query)
-            return '%s: %s' % (nick, response)
+            return u'%s: %s' % (nick, response)
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: No results (bad syntax?)' % nick
+            return u'%s: No results (bad syntax?)' % nick
 
 
 if __name__ == '__main__':

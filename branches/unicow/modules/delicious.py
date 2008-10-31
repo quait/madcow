@@ -25,6 +25,7 @@ from urlparse import urljoin
 from include.utils import Module, stripHTML
 import re
 import logging as log
+import urllib
 
 class Delicious(object):
 
@@ -42,18 +43,16 @@ class Delicious(object):
 
     def post(self, url, tags):
         try:
-            html = self.ua.openurl(url, size=2048)
+            html = self.ua.open(url, size=2048)
             title = stripHTML(self.title.search(html).group(1))
-        except:
+        except AttributeError:
             title = url
-        opts = {
-            'url': url,
-            'description': title,
-            'tags': ' '.join(tags),
-            'replace': 'no',
-            'shared': 'yes',
-        }
-        self.ua.openurl(self.posturl, opts=opts)
+        opts = {'url': url,
+                'description': title,
+                'tags': ' '.join(tags),
+                'replace': 'no',
+                'shared': 'yes'}
+        self.ua.open(self.posturl, opts=opts)
 
 
 class Main(Module):
@@ -79,7 +78,8 @@ class Main(Module):
     def response(self, nick, args, kwargs):
         try:
             for url in self.url.findall(args[0]):
-                self.delicious.post(url, tags=['madcow', nick])
+                self.delicious.post(url, tags=[nick])
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
+

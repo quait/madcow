@@ -25,6 +25,7 @@ import random
 from include.utils import Module, slurp
 import logging as log
 import shutil
+from include import encoding
 
 class Main(Module):
 
@@ -71,7 +72,7 @@ class Main(Module):
                     matches.append(regex)
                 self.data.append((matches, responses))
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
             self.enabled = False
 
@@ -86,8 +87,9 @@ class Main(Module):
         try:
             for matches, responses in self.data:
                 for match in matches:
-                    if match.search(args[0]) is not None:
-                        return self.parseTokens(random.choice(responses))
+                    if match.search(args[0]):
+                        result = self.parseTokens(random.choice(responses))
+                        return encoding.convert(result)
 
         except Exception, error:
             log.warn('error in %s: %s' % (self.__module__, error))

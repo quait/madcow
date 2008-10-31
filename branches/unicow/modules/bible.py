@@ -49,9 +49,9 @@ class Main(Module):
             response = response.strip()
             return response[:self.max]
         except Exception, error:
-            log.warn('error in module %s: %s' % self.__module__)
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return "%s: God didn't like that." % nick
+            return u"%s: God didn't like that." % nick
 
 
 if __name__ == '__main__':

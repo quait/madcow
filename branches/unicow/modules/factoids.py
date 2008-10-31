@@ -26,12 +26,14 @@ from re import I
 import os
 import anydbm
 import random
+from include import encoding
 
 __version__ = '0.1'
 __author__ = 'cj_ <cjones@gruntle.org>'
 __all__ = []
 
 class Factoids(object):
+
     """
     This is a straight port of infobot.pl factoid handling.
     yes, this code is totally ridiculous, but it works pretty well. :P
@@ -60,14 +62,16 @@ class Factoids(object):
         (r" '?bout", r' about'),
         (r',? any(hoo?w?|ways?)', r' '),
         (r',?\s*(pretty )*please\??\s*$', r'?'),
-        (r'th(e|at|is) (((m(o|u)th(a|er) ?)?fuck(in\'?g?)?|hell|heck|(god-?)?damn?(ed)?) ?)+', r''),
+        (r'th(e|at|is) (((m(o|u)th(a|er) ?)?fuck(in\'?g?)?|hell|heck|(god-?)?'
+         r'damn?(ed)?) ?)+', r''),
         (r'\bw+t+f+\b', r'where'),
         (r'this (.*) thingy?', r' \1'),
         (r'this thingy? (called )?', r''),
         (r'ha(s|ve) (an?y?|some|ne) (idea|clue|guess|seen) ', r'know '),
         (r'does (any|ne|some) ?(1|one|body) know ', r''),
         (r'do you know ', r''),
-        (r'can (you|u|((any|ne|some) ?(1|one|body)))( please)? tell (me|us|him|her)', r''),
+        (r'can (you|u|((any|ne|some) ?(1|one|body)))( please)? tell (me|us|hi'
+         r'm|her)', r''),
         (r'where (\S+) can \S+ (a|an|the)?', r''),
         (r'(can|do) (i|you|one|we|he|she) (find|get)( this)?', r'is'),
         (r'(i|one|we|he|she) can (find|get)', r'is'),
@@ -465,11 +469,12 @@ class Main(Module):
 
     def response(self, nick, args, kwargs):
         try:
-            return self.factoids.parse(args[0], nick, kwargs['req'])
+            result = self.factoids.parse(args[0], nick, kwargs['req'])
+            return encoding.convert(result)
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: %s' % (nick, self.error)
+            return u'%s: %s' % (nick, self.error)
 
 
 if __name__ == '__main__':

@@ -46,17 +46,17 @@ class Main(Module):
                 if len(data) != 4:
                     continue
                 if check.search(data[2]):
-                    results.append('=> %s: %s - %s - %s' % (data[0], data[1],
-                        data[2], data[3]))
+                    results.append(u'=> %s: %s - %s - %s' % (data[0], data[1],
+                                                             data[2], data[3]))
 
             if len(results) > 0:
-                return '\n'.join(results)
+                return u'\n'.join(results)
             else:
-                return '%s: No incidents found' % nick
+                return u'%s: No incidents found' % nick
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: I failed to perform that lookup' % nick
+            return u'%s: I failed to perform that lookup' % nick
 
 
 if __name__ == '__main__':

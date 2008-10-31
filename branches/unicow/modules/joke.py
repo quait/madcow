@@ -29,7 +29,10 @@ import logging as log
 class Main(Module):
     pattern = re.compile(r'^\s*joke(?:\s+(.+?))?\s*$', re.I)
     require_addressing = True
-    help = 'joke <oneliners | news | signs | nerd | professional | quotes | lightbulb | couples | riddles | religion | gross | blonde | politics | doit | laws | defs | dirty | ethnic | zippergate> - displays a random joke'
+    help = ('joke <oneliners | news | signs | nerd | professional | quotes | '
+            'lightbulb | couples | riddles | religion | gross | blonde | poli'
+            'tics | doit | laws | defs | dirty | ethnic | zippergate> - displ'
+            'ays a random joke')
     baseurl = 'http://www.randomjoke.com/topic/'
     random_url = urljoin(baseurl, 'haha.php')
     joke = re.compile(r'next.joke.*?<P>(.*?)<CENTER>', re.DOTALL)
@@ -52,13 +55,11 @@ class Main(Module):
             result = result.replace('\x14', ' ')
             result = result.replace('\n', ' ')
             result = re.sub(r'\s{2,}', ' ', result)
-            result = result.strip()
-
-            return '%s' % result
+            return result.strip()
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return "%s: I had a problem with that, sorry." % nick
+            return u"%s: I had a problem with that, sorry." % nick
 
 
 if __name__ == '__main__':

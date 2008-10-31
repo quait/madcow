@@ -49,7 +49,7 @@ class Main(Module):
         verses = self._verse_break.split(lyrics)
         verses = [self._line_break.sub(' / ', verse) for verse in verses]
         verses = [stripHTML(verse) for verse in verses]
-        return '\n'.join(verses)
+        return '\n'.join(verses).strip()
 
     def response(self, nick, args, kwargs):
         try:
@@ -63,16 +63,16 @@ class Main(Module):
                 url = urljoin(self.baseurl, url)
             page = geturl(url, referer=self.baseurl)
             soup = BeautifulSoup(page)
-            title = stripHTML(str(soup.find('title'))).replace(self.advert, '')
-            lyrics = str(soup.find('div', attrs={'class': 'lyricbox'}))
+            title = soup.find('title').string.replace(self.advert, '')
+            lyrics = unicode(soup.find('div', attrs={'class': 'lyricbox'}))
             lyrics = self.normalize(lyrics)
             if not lyrics or lyrics == 'None':
                 raise Exception, 'no results'
-            return title + ':\n' + lyrics
+            return u'%s:\n%s' % (title, lyrics)
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: %s' % (nick, error)
+            return u'%s: %s' % (nick, error)
 
 
 if __name__ == '__main__':

@@ -19,15 +19,21 @@
 
 """Watch URLs in channel, punish people for living under a rock"""
 
+from __future__ import with_statement
 import re
 import os
 import urlparse
 import datetime
-from sqlobject import *
 import random
 from include.throttle import Throttle
 from include.utils import Module
 import logging as log
+import warnings
+
+# XXX 2.6 complains about some code deprecated in 3.0
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    from sqlobject import *
 
 try:
     class url(SQLObject):
@@ -78,22 +84,21 @@ class Main(Module):
     require_addressing = False
     help = 'score [name,range] - get memescore, empty for top10'
     matchURL = re.compile('(http://\S+)', re.I)
-    scoreRequest = re.compile(r'^\s*score(?:(?:\s+|[:-]+\s*)(\S+?)(?:\s*-\s*(\S+))?)?\s*$', re.I)
+    scoreRequest = re.compile(r'^\s*score(?:(?:\s+|[:-]+\s*)(\S+?)(?:\s*-\s*('
+                              r'\S+))?)?\s*$', re.I)
     colonHeader = re.compile(r'^\s*(.*?)\s*:\s*$')
-    riffs = [
-        'OLD MEME ALERT!',
-        'omg, SO OLD!',
-        'Welcome to yesterday.',
-        'been there, done that.',
-        'you missed the mememobile.',
-        'oldest. meme. EVAR.',
-        'jesus christ you suck.',
-        'you need a new memesource, bucko.',
-        'that was funny the first time i saw it.',
-        'new to the internet?',
-        'i think that came installed with the internet',
-    ]
     get_frag = re.compile(r'^(.*)#([^;/?:@=&]*)$')
+    riffs = ['OLD MEME ALERT!',
+             'omg, SO OLD!',
+             'Welcome to yesterday.',
+             'been there, done that.',
+             'you missed the mememobile.',
+             'oldest. meme. EVAR.',
+             'jesus christ you suck.',
+             'you need a new memesource, bucko.',
+             'that was funny the first time i saw it.',
+             'new to the internet?',
+             'i think that came installed with the internet']
 
     def __init__(self, madcow):
         self.throttle = Throttle()
@@ -102,7 +107,7 @@ class Main(Module):
         uri = engine + '://'
         if engine == 'sqlite':
             uri += os.path.join(madcow.prefix,
-                    'data/db-%s-memes' % madcow.namespace)
+                                'data/db-%s-memes' % madcow.namespace)
         elif engine == 'mysql':
             user = config.db_user
             if len(config.db_pass):
@@ -229,8 +234,8 @@ class Main(Module):
                 for i, data in enumerate(scores):
                     name, score = data
                     out.append('#%s: %s (%s)' % (i + x, name, score))
-                return ', '.join(out)
-                
+                return u', '.join(out)
+
             except:
                 pass
 
@@ -241,7 +246,7 @@ class Main(Module):
         event = self.throttle.registerEvent(name='memebot', user=nick)
         if event.isThrottled():
             if event.warn():
-                return '%s: Stop abusing me plz.' % nick
+                return u'%s: Stop abusing me plz.' % nick
             else:
                 return
 
@@ -277,29 +282,26 @@ class Main(Module):
             # chew them out unless its my own
             if old.author.name.lower() != nick.lower():
                 response = 'first posted by %s on %s' % (old.author.name,
-                        old.posted)
+                                                         old.posted)
                 riff = random.choice(self.riffs)
                 old.author.pointsCredit = old.author.pointsCredit + 1
                 me.pointsOld = me.pointsOld + 1
                 old.citations = old.citations + 1
-                return '%s %s' % (riff, response)
-
+                return u'%s %s' % (riff, response)
 
         except SQLObjectNotFound:
             try:
                 c = channel.byName(chan)
             except SQLObjectNotFound:
                 c = channel(name=chan)
-
             urlid = url(url=orig, clean=clean, author=me, channel=c)
-
             if len(comment1) > 0:
                 comments(url=urlid, text=comment1, author=me)
             if len(comment2) > 0:
                 comments(url=urlid, text=comment2, author=me)
-
             me.pointsNew = me.pointsNew + 1
 
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
+

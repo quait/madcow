@@ -25,6 +25,7 @@ from include.utils import Module
 import random
 import os
 import logging as log
+from include import encoding
 
 __author__ = 'James Johnston <jjohnston@email4life.com>'
 
@@ -58,12 +59,12 @@ class Main(Module):
         try:
             self.figlet.setFont(font=random.choice(self.fonts))
             text = self.figlet.renderText(args[0])
-            return text
+            return encoding.convert(text)
 
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: figlet :(' % nick
+            return u'%s: figlet :(' % nick
 
 
 if __name__ == '__main__':

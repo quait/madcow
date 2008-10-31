@@ -99,7 +99,7 @@ class Main(Module):
             self.log.add(cl)
             oldline = self.log.getMatchingLine(cl)
             if oldline and oldline.nick != nick:
-                return "Jinx! %s owes %s a coke!" % (nick, oldline.nick)
+                return u"Jinx! %s owes %s a coke!" % (nick, oldline.nick)
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)

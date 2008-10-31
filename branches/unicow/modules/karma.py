@@ -56,7 +56,7 @@ class Karma(object):
             if nick.lower() != target.lower():
                 self.adjust(nick=target, adjustment=adjustment)
             kr.matched = True
-        except:
+        except AttributeError:
             pass
 
         # detect a query for someone's karma
@@ -65,7 +65,7 @@ class Karma(object):
             karma = self.query(nick=target)
             kr.matched = True
             kr.reply = "%s: %s's karma is %s" % (nick, target, karma)
-        except:
+        except AttributeError:
             pass
         return kr
 
@@ -87,7 +87,9 @@ class Karma(object):
 
 
 class Main(Module):
+
     """This object is autoloaded by the bot"""
+
     pattern = Module._any
     require_addressing = False
     help = "<nick>[++/--] - adjust someone's karma"
@@ -102,8 +104,9 @@ class Main(Module):
         try:
             kr = self.karma.process(nick, input)
             kwargs['req'].matched = kr.matched
-            return kr.reply
+            if kr.reply:
+                return unicode(kr.reply)
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: problem with command: %s' % (nick, error)
+            return u'%s: problem with command: %s' % (nick, error)

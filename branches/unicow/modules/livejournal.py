@@ -17,11 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Madcow.  If not, see <http://www.gnu.org/licenses/>.
 
-"""get a random lj"""
+"""Read from LiveJournal"""
 
 import re
-from include import rssparser
-from include.utils import Module, stripHTML, isUTF8
+from include import feedparser
+from include.utils import Module, stripHTML
 from include.useragent import geturl
 from urlparse import urljoin
 import logging as log
@@ -46,22 +46,14 @@ class Main(Module):
                 doc = geturl(self.randomURL)
                 user = re.search('"currentJournal": "(.*?)"', doc).group(1)
             url = urljoin(self.baseURL, '/users/%s/data/rss' % user)
-            feed = rssparser.parse(url)
-
-            # get latest entry and their homepage url
-            entry, page = map(stripHTML, map(
-                lambda x: x.encode(feed.encoding),
-                [feed.entries[0].description, feed.channel.link]))
-
-            # these can get absurdly long
-            entry = entry[:self.max]
-
-            return '%s: [%s] %s' % (nick, page, entry)
-
+            rss = feedparser.parse(url)
+            entry = stripHTML(rss.entries[0].description)[:self.max]
+            page = stripHTML(rss.channel.link)
+            return u'%s: [%s] %s' % (nick, page, entry)
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return "%s: Couldn't load the page LJ returned D:" % nick
+            return u"%s: Couldn't load the page LJ returned D:" % nick
 
 
 if __name__ == '__main__':

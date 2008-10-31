@@ -43,7 +43,6 @@ class Main(Module):
                 num = int(args[1])
             except:
                 num = 1
-
             url = urljoin(self.base_url, word)
             doc = geturl(url)
             defs = self.re_defs.search(doc).group(1)
@@ -56,13 +55,13 @@ class Main(Module):
             definition = defs[num - 1]
             definition = stripHTML(definition)
             definition = self.header.sub('', definition)
-
-            return '%s: [%s/%s] %s' % (nick, num, len(defs), definition)
+            definition = definition.strip()
+            return u'%s: [%s/%s] %s' % (nick, num, len(defs), definition)
 
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return "%s: I couldn't look that up for some reason.  D:" % nick
+            return u"%s: I couldn't look that up for some reason.  D:" % nick
 
 
 if __name__ == '__main__':

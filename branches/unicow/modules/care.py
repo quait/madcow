@@ -75,13 +75,12 @@ class Main(Module):
             bar[pos] = 'o'
             bar = ''.join(bar)
             bar = '|' + bar + '|'
-            response = '%s: %s' % (self.title, bar)
-            return response
+            return u'%s: %s' % (self.title, bar)
 
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: %s' % (nick, self.error)
+            return u'%s: %s' % (nick, self.error)
 
 
 if __name__ == '__main__':

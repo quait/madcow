@@ -42,15 +42,15 @@ class Main(Module):
             main = soup.find('div', attrs={'id': 'main'})
             confs = main.findAll('div', attrs={'class': 'content'})
             conf = random.choice(confs)
-            conf = [str(p) for p in conf.findAll('p')]
-            conf = ' '.join(conf)
+            conf = [unicode(p) for p in conf.findAll('p')]
+            conf = u' '.join(conf)
             conf = stripHTML(conf)
             conf = conf.strip()
             return conf
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: I had some issues with that..' % nick
+            return u'%s: I had some issues with that..' % nick
 
 
 if __name__ == '__main__':
