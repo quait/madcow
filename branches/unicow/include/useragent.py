@@ -25,6 +25,7 @@ import urlparse
 import urllib
 import logging as log
 import encoding
+import google
 
 AGENT = 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)'
 VERSION = sys.version_info[0] * 10 + sys.version_info[1]
@@ -66,7 +67,11 @@ class UserAgent(object):
             args.append(timeout)
         response = self.opener.open(*args)
         data = response.read(size)
-        return encoding.convert(data, response.headers)
+        if isinstance(response, google.Response):
+            headers = None
+        else:
+            headers = response.headers
+        return encoding.convert(data, headers)
 
     @staticmethod
     def settimeout(timeout):

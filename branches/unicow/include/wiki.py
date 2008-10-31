@@ -28,6 +28,7 @@ __author__ = 'cj_ <cjones@gruntle.org>'
 __all__ = ['Wiki']
 
 class Wiki(object):
+
     """Return summary from WikiMedia projects"""
 
     # site-specific details, default is english wikipedia
@@ -42,14 +43,11 @@ class Wiki(object):
     _sample_size = 32 * 1024
 
     # precompiled regex
-    _dash = '\xe2\x80\x94' # wikipedia people love their unicode :(
-    _utf8 = re.compile(r'[\x80-\xff]')
     _citations = re.compile(r'\[.*?\]', re.DOTALL)
     _audio = re.compile(r'audiolink', re.I)
     _parens = re.compile(r'\(.*?\)', re.DOTALL)
     _whitespace = re.compile(r'[ \t\r\n]+')
     _sentence = re.compile(r'(.*?\.)\s+', re.DOTALL)
-    _nbsp_entity = re.compile(r'&#160;')
     _fix_punc = re.compile(r'\s+([,;:.])')
 
     def __init__(self, base_url=_base_url, random_path=_random_path,
@@ -73,7 +71,7 @@ class Wiki(object):
         # a friendly failure for now
         if soup.find('div', attrs={'id': 'disambig'}):
             try:
-                summary = '%s (Disambiguation) - ' % title
+                summary = u'%s (Disambiguation) - ' % title
                 for link in soup.find('ul').findAll('a'):
                     title = str(link['title']).strip()
                     if len(summary) + len(title) + 2 > self.summary_size:
@@ -82,7 +80,7 @@ class Wiki(object):
                         summary += ', '
                     summary += title
             except:
-                summary = 'Fancy, unsupported disambiguation page!'
+                summary = u'Fancy, unsupported disambiguation page!'
             return summary
 
         # massage into plain text by concatenating paragraphs
@@ -101,14 +99,14 @@ class Wiki(object):
 
         # search error
         if title == self.error:
-            return 'No results found for "%s"' % query
+            return u'No results found for "%s"' % query
 
         # generate summary by adding as many sentences as possible before limit
-        summary = '%s -' % title
+        summary = u'%s -' % title
         for sentence in Wiki._sentence.findall(content):
             if len(summary) + 1 + len(sentence) > self.summary_size:
                 break
-            summary += ' %s' % sentence
+            summary += u' %s' % sentence
         return summary
 
     def get_soup(self, query):
@@ -124,11 +122,6 @@ class Wiki(object):
             url = urljoin(self.base_url, self.search_path)
         page = geturl(url, referer=self.base_url, opts=opts,
                       size=self.sample_size)
-
-        # remove high ascii since this is going to IRC
-        page = Wiki._nbsp_entity.sub(' ', page)
-        page = page.replace(Wiki._dash, ' -- ')
-        page = Wiki._utf8.sub('', page)
 
         # create BeautifulSoup document tree
         soup = BeautifulSoup(page)
