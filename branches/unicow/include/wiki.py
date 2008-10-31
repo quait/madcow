@@ -123,7 +123,7 @@ class Wiki(object):
             opts = {'search': query, 'go': 'Go'}
             url = urljoin(self.base_url, self.search_path)
         page = geturl(url, referer=self.base_url, opts=opts,
-                size=self.sample_size)
+                      size=self.sample_size)
 
         # remove high ascii since this is going to IRC
         page = Wiki._nbsp_entity.sub(' ', page)

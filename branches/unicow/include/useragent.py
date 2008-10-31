@@ -17,166 +17,159 @@
 # You should have received a copy of the GNU General Public License
 # along with Madcow.  If not, see <http://www.gnu.org/licenses/>.
 
-"""Library to mimic a browser"""
+"""Closely mimic a browser"""
 
-from urllib2 import HTTPCookieProcessor, build_opener, Request, httplib
-from cookielib import CookieJar
-from urlparse import urlparse, urlunparse
-from urllib import urlencode
-import socket
+import sys
+import urllib2
+import urlparse
+import urllib
+import re
+from utils import stripHTML
+import codecs
+import chardet
 import logging as log
 
-__version__ = '2.0'
-__author__ = 'cj_ <cjones@gruntle.org>'
-__all__ = ['UserAgent', 'geturl', 'posturl']
-
-# user agent is shared across instances
-_ua = None
+AGENT = 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)'
+VERSION = sys.version_info[0] * 10 + sys.version_info[1]
+UA = None
 
 class UserAgent(object):
-    """This is the class to mimic a browser"""
-    _msie = 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)'
-    blocksize = 512
 
-    def __init__(self, agent=_msie, cookies=True, handlers=[]):
-        self.agent = agent
+    """Closely mimic a browser"""
+
+    meta_re = re.compile(r'<meta\s+(.*?)\s*>', re.I | re.DOTALL)
+    attr_re = re.compile(r'\s*([a-zA-Z_][-.:a-zA-Z_0-9]*)(\s*=\s*(\'[^\']*\'|'
+                         r'"[^"]*"|[-a-zA-Z0-9./,:;+*%?!&$\(\)_#=~@]*))?')
+
+    def __init__(self, handlers=None, cookies=True, agent=AGENT, timeout=None):
+        self.timeout = timeout
+        if handlers is None:
+            handlers = []
         if cookies:
-            handlers.append(HTTPCookieProcessor(CookieJar()))
-        self.opener = build_opener(*handlers)
+            handlers.append(urllib2.HTTPCookieProcessor)
+        self.opener = urllib2.build_opener(*handlers)
+        if agent:
+            self.opener.addheaders = [('User-Agent', agent)]
 
-    def openurl(self, url, data=None, opts={}, referer=None, fo=None, size=-1,
-            method='GET'):
-        """Open a URL and return output"""
-
-        # parse options and generate proper query string
-        url = list(urlparse(url))
-        method = method.lower()
-        query = [urlencode(opts), data]
-        if method == 'get':
-            query.append(url[4])
-        query = '&'.join([i for i in query if i])
-        query = query.replace(' ', '%20')
-        if method == 'get':
-            url[4] = query
-            data = None
-        else:
-            data = query
-        url = urlunparse(url)
-
-        log.debug('fetching url: ' + url)
-
-        # issue the request
-        request = Request(url, data=data)
-        request.add_header('User-Agent', self.agent)
+    def open(self, url, opts=None, data=None, referer=None, size=-1,
+             timeout=-1):
+        """Open URL and return unicode content"""
+        url = list(urlparse.urlparse(url))
+        if opts:
+            query = [urllib.urlencode(opts)]
+            if url[4]:
+                query.append(url[4])
+            url[4] = '&'.join(query)
+        request = urllib2.Request(urlparse.urlunparse(url), data)
         if referer:
             request.add_header('Referer', referer)
-        response = self.opener.open(request)
+        if timeout == -1:
+            timeout = self.timeout
+        args = [request]
+        if VERSION < 26:
+            self.settimeout(timeout)
+        else:
+            args.append(timeout)
+        response = self.opener.open(*args)
+        data = response.read(size)
 
-        # return output from request
-        if fo is None:
-            return response.read(size)
+        # XXX this crap should go in its own library
 
-        # write output to provided fileobj
-        blocksize = self.blocksize
-        count = 0
-        while True:
-            if size > 0:
-                if count >= size:
-                    break
-                if (count + blocksize) >= size:
-                    blocksize = size - count
-            block = response.read(blocksize)
-            if not len(block):
-                break
-            fo.write(block)
-            count += len(block)
+        # try to figure out the encoding first from meta tags
+        charset = self.metacharset(data)
+        if charset:
+            log.debug('using http meta header encoding: %s' % charset)
+            return data.decode(charset, 'replace')
 
-    def __str__(self):
-        return '<%s %s>' % (self.__class__.__name__, self.__dict__)
+        # if that doesn't work, see if there's a real http header
+        if response.headers.plist:
+            charset = response.headers.plist[0]
+            attrs = self.parseattrs(charset)
+            if 'charset' in attrs:
+                charset = self.lookup(attrs['charset'])
+            if charset:
+                log.debug('using http header encoding: %s' % charset)
+                return data.decode(charset, 'replace')
 
-    __repr__ = __str__
+        # that didn't work, try chardet library
+        charset = self.lookup(chardet.detect(data)['encoding'])
+        if charset:
+            log.debug('detected encoding: %s' % repr(charset))
+            return data.decode(charset, 'replace')
 
+        # if that managed to fail, just use ascii
+        log.warn("couldn't detect encoding, using ascii")
+        return data.decode('ascii', 'replace')
 
-def settimeout(timeout):
-    """Set socket timeout for all requests"""
-
-    def connect(self):
-        error = 'unknown socket error'
+    @staticmethod
+    def lookup(charset):
+        """Lookup codec"""
         try:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.settimeout(timeout)
-            self.sock.connect((self.host, self.port))
-        except socket.error, error:
-            if self.sock:
-                self.sock.close()
-            self.sock = None
-            raise error
+            return codecs.lookup(charset).name
+        except LookupError:
+            pass
 
-    httplib.HTTPConnection.connect = connect
+    @classmethod
+    def metacharset(cls, data):
+        """Parse data for HTML meta character encoding"""
+        for meta in cls.meta_re.findall(data):
+            attrs = cls.parseattrs(meta)
+            if ('http-equiv' in attrs and
+                attrs['http-equiv'].lower() == 'content-type' and
+                'content' in attrs):
+                content = attrs['content']
+                content = cls.parseattrs(content)
+                if 'charset' in content:
+                    return cls.lookup(content['charset'])
+
+    @classmethod
+    def parseattrs(cls, data):
+        """Parse key=val attributes"""
+        attrs = {}
+        for key, rest, val in cls.attr_re.findall(data):
+            if not rest:
+                val = None
+            elif val[:1] == '\'' == val[-1:] or val[:1] == '"' == val[-1:]:
+                val = val[1:-1]
+                val = stripHTML(val)
+            attrs[key.lower()] = val
+        return attrs
+
+    @staticmethod
+    def settimeout(timeout):
+        """Monkey-patch socket timeout if older urllib2"""
+
+        def connect(self):
+            try:
+                self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.sock.settimeout(timeout)
+                self.sock.connect((self.host, self.port))
+            except socket.error, error:
+                if self.sock:
+                    self.sock.close()
+                self.sock = None
+                raise error
+
+        import httplib
+        httplib.HTTPConnection.connect = connect
 
 
-def get_agent():
-    global _ua
-    if _ua is None:
-        _ua = UserAgent()
-    return _ua
+def getua():
+    """Returns global user agent instance"""
+    global UA
+    if UA is None:
+        UA = UserAgent()
+    return UA
 
-def setup(agent=UserAgent._msie, cookies=True, handlers=[], timeout=None):
-    global _ua
-    _ua = UserAgent(agent, cookies, handlers)
-    settimeout(timeout)
 
-def geturl(url, data=None, opts={}, referer=None, fo=None, size=-1):
-    """Issue GET request"""
-    return get_agent().openurl(url, data, opts, referer, fo, size, 'get')
+def setup(handlers=None, cookies=True, agent=AGENT, timeout=None):
+    """Create global user agent instance"""
+    global UA
+    UA = UserAgent(handlers, cookies, agent, timeout)
 
-def posturl(url, data=None, opts={}, referer=None, fo=None, size=-1):
-    """Issue POST request"""
-    return get_agent().openurl(url, data, opts, referer, fo, size, 'post')
 
-def main():
-    """When called from the commandline, act as a limited wget"""
-    op = OptionParser(version=__version__, usage=__usage__)
-    op.add_option('-o', '--output', metavar='<file>', default=None,
-            help='output to this file instead of STDOUT')
-    op.add_option('-p', '--post', dest='method', action='store_const',
-            default='GET', const='POST', help='issue POST instead of GET')
-    op.add_option('-d', '--data', metavar='<data>',
-            help='send this data in post request (implies -p)')
-    op.add_option('-s', '--size', metavar='<bytes>', type='int',
-            default=-1, help='limit read to these bytes, default is read all')
-    op.add_option('-r', '--referer', metavar='<url>', help='use this referer')
-    op.add_option('-a', '--agent', metavar='<agent>', default=UserAgent._msie,
-            help='default: %default')
-    op.add_option('-t', '--timeout', type='int', metavar='<secs>',
-            help='set request timeout (default: %default)')
-    opts, args = op.parse_args()
+def geturl(url, opts=None, data=None, referer=None, size=-1, timeout=-1):
+    return getua().open(url, opts, data, referer, size, timeout)
 
-    setup(agent=opts.timeout, cookies=True, handlers=[], timeout=opts.timeout)
-    ua = get_agent()
+geturl.__doc__ = UserAgent.open.__doc__
 
-    if len(args) != 1:
-        sys.stderr.write('Error: missing URL\n')
-        op.print_help()
-        return 1
-    url = args[0]
-
-    if opts.data is not None:
-        opts.method = 'POST'
-
-    if opts.output is None:
-        fo = sys.stdout
-    else:
-        fo = open(opts.output, 'wb')
-    try:
-        ua.openurl(url, opts.data, {}, opts.referer, fo, opts.size, opts.method)
-    finally:
-        fo.close()
-
-    return 0
-
-if __name__ == '__main__':
-    import sys
-    from optparse import OptionParser
-    __usage__ = '%prog [options] <url>'
-    sys.exit(main())
