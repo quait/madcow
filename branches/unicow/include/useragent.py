@@ -23,11 +23,8 @@ import sys
 import urllib2
 import urlparse
 import urllib
-import re
-from utils import stripHTML
-import codecs
-import chardet
 import logging as log
+import encoding
 
 AGENT = 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)'
 VERSION = sys.version_info[0] * 10 + sys.version_info[1]
@@ -36,10 +33,6 @@ UA = None
 class UserAgent(object):
 
     """Closely mimic a browser"""
-
-    meta_re = re.compile(r'<meta\s+(.*?)\s*>', re.I | re.DOTALL)
-    attr_re = re.compile(r'\s*([a-zA-Z_][-.:a-zA-Z_0-9]*)(\s*=\s*(\'[^\']*\'|'
-                         r'"[^"]*"|[-a-zA-Z0-9./,:;+*%?!&$\(\)_#=~@]*))?')
 
     def __init__(self, handlers=None, cookies=True, agent=AGENT, timeout=None):
         self.timeout = timeout
@@ -54,6 +47,7 @@ class UserAgent(object):
     def open(self, url, opts=None, data=None, referer=None, size=-1,
              timeout=-1):
         """Open URL and return unicode content"""
+        log.debug('fetching url: %s' % url)
         url = list(urlparse.urlparse(url))
         if opts:
             query = [urllib.urlencode(opts)]
@@ -72,68 +66,7 @@ class UserAgent(object):
             args.append(timeout)
         response = self.opener.open(*args)
         data = response.read(size)
-
-        # XXX this crap should go in its own library
-
-        # try to figure out the encoding first from meta tags
-        charset = self.metacharset(data)
-        if charset:
-            log.debug('using http meta header encoding: %s' % charset)
-            return data.decode(charset, 'replace')
-
-        # if that doesn't work, see if there's a real http header
-        if response.headers.plist:
-            charset = response.headers.plist[0]
-            attrs = self.parseattrs(charset)
-            if 'charset' in attrs:
-                charset = self.lookup(attrs['charset'])
-            if charset:
-                log.debug('using http header encoding: %s' % charset)
-                return data.decode(charset, 'replace')
-
-        # that didn't work, try chardet library
-        charset = self.lookup(chardet.detect(data)['encoding'])
-        if charset:
-            log.debug('detected encoding: %s' % repr(charset))
-            return data.decode(charset, 'replace')
-
-        # if that managed to fail, just use ascii
-        log.warn("couldn't detect encoding, using ascii")
-        return data.decode('ascii', 'replace')
-
-    @staticmethod
-    def lookup(charset):
-        """Lookup codec"""
-        try:
-            return codecs.lookup(charset).name
-        except LookupError:
-            pass
-
-    @classmethod
-    def metacharset(cls, data):
-        """Parse data for HTML meta character encoding"""
-        for meta in cls.meta_re.findall(data):
-            attrs = cls.parseattrs(meta)
-            if ('http-equiv' in attrs and
-                attrs['http-equiv'].lower() == 'content-type' and
-                'content' in attrs):
-                content = attrs['content']
-                content = cls.parseattrs(content)
-                if 'charset' in content:
-                    return cls.lookup(content['charset'])
-
-    @classmethod
-    def parseattrs(cls, data):
-        """Parse key=val attributes"""
-        attrs = {}
-        for key, rest, val in cls.attr_re.findall(data):
-            if not rest:
-                val = None
-            elif val[:1] == '\'' == val[-1:] or val[:1] == '"' == val[-1:]:
-                val = val[1:-1]
-                val = stripHTML(val)
-            attrs[key.lower()] = val
-        return attrs
+        return encoding.convert(data, response.headers)
 
     @staticmethod
     def settimeout(timeout):

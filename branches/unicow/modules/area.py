@@ -40,12 +40,12 @@ class Main(Module):
             geturl(self.baseurl)
             doc = geturl(self.searchurl, opts={'number': args[0]})
             city, state = self.city.search(doc).groups()
-            city = ' '.join([x.lower().capitalize() for x in city.split()])
-            return '%s: %s = %s, %s' % (nick, args[0], city, state)
+            city = u' '.join([x.lower().capitalize() for x in city.split()])
+            return u'%s: %s = %s, %s' % (nick, args[0], city, state)
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return "%s: I couldn't look that up for some reason.  D:" % nick
+            return u"%s: I couldn't look that up for some reason.  D:" % nick
 
 
 if __name__ == '__main__':

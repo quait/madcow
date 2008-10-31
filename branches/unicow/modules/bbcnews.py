@@ -45,13 +45,13 @@ class Main(Module):
             else:
                 url = self._search_url + urllib.quote(query)
             item = rssparser.parse(url).entries[0]
-            return ' | '.join(map(stripHTML, map(
-                lambda x: x.encode('raw-unicode-escape'),
-                [item.link, item.title, item.description])))
+            return u' | '.join(map(stripHTML,
+                                   [item.link, item.title, item.description]))
+
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: %s' % (nick, self._error)
+            return u'%s: %s' % (nick, self._error)
 
 
 if __name__ == '__main__':

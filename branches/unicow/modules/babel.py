@@ -25,6 +25,7 @@ import re
 from include.useragent import geturl
 from include.utils import stripHTML, cache_property
 import urlparse
+from include import encoding
 
 __version__ = '0.1'
 __author__ = 'Chris Jones <cjones@gruntle.org>'
@@ -63,8 +64,8 @@ class Main(Module):
                 log.exception(error)
                 message = error
         else:
-            message = ', '.join(self.langs)
-        return '%s: %s' % (nick, message)
+            message = u', '.join(self.langs)
+        return u'%s: %s' % (nick, message)
 
     def parse(self, cmd):
         """Parse command structure and transform text"""
@@ -110,6 +111,7 @@ class Main(Module):
         exec('data = ' + data)
         if isinstance(data, list):
             data = data[0]
+        data = encoding.convert(data)
         return data
 
     @cache_property(_lang_timeout)
@@ -122,7 +124,7 @@ class Main(Module):
             raise BabelError("couldn't find langs")
         langs = {}
         for lang in self._lang_re.findall(data):
-            code, name = map(str.lower, lang)
+            code, name = map(unicode.lower, lang)
             if name == 'detect language':
                 name = 'auto'
             langs[name] = code

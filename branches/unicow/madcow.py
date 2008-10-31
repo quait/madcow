@@ -197,9 +197,9 @@ class Madcow(object):
             self.lock.acquire()
             try:
                 if isinstance(response, str):
-                    error = 'WE GOT A RAW STRING!!!'
+                    error = 'WE GOT A RAW STRING!!! %s' % repr(response)
                     log.error(error)
-                    self.protocol_output(error, req)
+                    #self.protocol_output(error, req)
                 else:
                     self.protocol_output(response.encode(self.charset), req)
             except Exception, error:

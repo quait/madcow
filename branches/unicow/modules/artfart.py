@@ -52,11 +52,11 @@ class Main(Module):
             result = random.choice(results)
             title, art = result
             art = stripHTML(art)
-            return '>>> %s <<<\n%s' % (title, art)
+            return u'>>> %s <<<\n%s' % (title, art)
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return "%s: I had a problem with that, sorry." % nick
+            return u"%s: I had a problem with that, sorry." % nick
 
 
 if __name__ == '__main__':
