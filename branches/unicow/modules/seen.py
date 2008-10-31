@@ -56,15 +56,18 @@ class Main(Module):
 
             minutes = seconds / 60
             seconds = seconds % 60
-            if minutes: last = '%s minute%s' % (minutes, 's' * (minutes != 1))
+            if minutes:
+                last = '%s minute%s' % (minutes, 's' * (minutes != 1))
 
             hours = minutes / 60
             minutes = minutes % 60
-            if hours: last = '%s hour%s' % (hours, 's' * (hours != 1))
+            if hours:
+                last = '%s hour%s' % (hours, 's' * (hours != 1))
 
             days = hours / 24
             hours = hours % 24
-            if days: last = '%s day%s' % (days, 's' * (days != 1))
+            if days:
+                last = '%s day%s' % (days, 's' * (days != 1))
 
             return message, channel, last
         except:
@@ -88,9 +91,9 @@ class Main(Module):
             user = match.group(1)
             message, channel, last = self.get(user)
             if not message:
-                return "%s: I haven't seen %s say anything plz" % (nick, user)
-            return '%s: %s was last seen %s ago on %s saying "%s"' % (nick,
-                    user, last, channel, message)
+                return u"%s: I haven't seen %s say anything plz" % (nick, user)
+            return u'%s: %s was last seen %s ago on %s saying "%s"' % (
+                    nick, user, last, channel, message)
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)

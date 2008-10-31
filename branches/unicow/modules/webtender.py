@@ -48,14 +48,14 @@ class Main(Module):
             title = self.title.search(doc).group(1)
             ingredients = self.ingredients.findall(doc)
             instructions = self.instructions.search(doc).group(1)
-            response = '%s: %s - %s - %s' % (nick, title,
-                    ', '.join(ingredients), instructions)
+            response = u'%s: %s - %s - %s' % (
+                    nick, title, ', '.join(ingredients), instructions)
             response = stripHTML(response)
             return response
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return "%s: Something ungood happened looking that up, sry" % nick
+            return u"%s: Something ungood happened looking that up, sry" % nick
 
 
 if __name__ == '__main__':

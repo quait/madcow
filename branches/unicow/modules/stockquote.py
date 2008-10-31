@@ -35,6 +35,11 @@ __author__ = 'cj_ <cjones@gruntle.org>'
 _namespace = 'madcow'
 _dir = '..'
 
+class UnknownSymbol(Exception):
+
+    pass
+
+
 class Yahoo(object):
 
     _quote_url = 'http://finance.yahoo.com/q?s=SYMBOL'
@@ -50,6 +55,8 @@ class Yahoo(object):
         company = ' '.join([str(item) for item in soup.find('h1').contents])
         company = stripHTML(company)
         tables = soup.findAll('table')
+        if not tables:
+            raise UnknownSymbol
         table = tables[0]
         rows = table.findAll('tr')
         data = {}
@@ -118,11 +125,14 @@ class Main(Module):
     def response(self, nick, args, kwargs):
         query = args[0]
         try:
-            return self.yahoo.get_quote(query)
+            response = unicode(self.yahoo.get_quote(query))
+        except UnknownSymbol:
+            response = u"Symbol not found, market may have crashed"
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return "Symbol not found, market may have crashed"
+            response = u'%s: %s' % (nick, error)
+        return response
 
 
 if __name__ == '__main__':

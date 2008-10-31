@@ -67,15 +67,15 @@ class Main(Module):
         self.madcow = madcow
 
     def response(self, nick, args, kwargs):
-        # this function should return a response or None
+        # this function should return a unicode response or None
         # - args is a list that matches the matched parts of the pattern
         # - kwargs give you access to the details of the request from the bot
         try:
-            raise NotImplementedError
+            return u'module not implemented'
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: %s' % (nick, error)
+            return u'%s: %s' % (nick, error)
 
 
 if __name__ == '__main__':

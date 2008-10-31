@@ -246,11 +246,11 @@ class Main(Module):
                 response = '%s: %s' % (nick, self.movie.rate(args[1]))
             elif args[2] == 'topmovies':
                 response = self.movie.topmovies()
-            return response
+            return unicode(response)
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: %s' % (nick, self.error)
+            return u'%s: %s' % (nick, self.error)
 
 
 def normalize(name):

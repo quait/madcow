@@ -31,9 +31,10 @@ __version__ = '0.3'
 __author__ = 'cj_ <cjones@gruntle.org>'
 __all__ = []
 
-FORMAT = 'Terror: %s, DoomsDay: %s, IranWar: %s, IraqWar: %s, BodyCount: %s'
+FORMAT = u'Terror: %s, DoomsDay: %s, IranWar: %s, IraqWar: %s, BodyCount: %s'
 
 class Terror(object):
+
     _url = 'http://www.dhs.gov/dhspublic/getAdvisoryCondition'
     _re_level = re.compile(r'<THREAT_ADVISORY CONDITION="(\w+)" />')
     _color_map = {
@@ -60,6 +61,7 @@ class Terror(object):
 
 
 class DoomsDay(object):
+
     _url = 'http://www.thebulletin.org/'
     _re_time = re.compile(r'<div class="module-content"><h3>(.*?)</h3>')
 
@@ -75,6 +77,7 @@ class DoomsDay(object):
 
 
 class IranWar(object):
+
     _url = 'http://www.areweatwarwithiran.com/rss.xml'
 
     def war(self):
@@ -88,6 +91,7 @@ class IranWar(object):
 
 
 class IraqWar(object):
+
     _war_url = 'http://areweatwarwithiraq.com/rss.xml'
     _bodycount_url = 'http://www.iraqbodycount.org/'
     _re_whitespace = re.compile(r'\s+')
@@ -119,6 +123,7 @@ class IraqWar(object):
 
 
 class Main(Module):
+
     pattern = re.compile('^\s*(?:terror|doomsday|war)\s*$', re.I)
     require_addressing = True
     help = 'terror - NEVAR FORGET'
@@ -136,11 +141,12 @@ class Main(Module):
     def response(self, nick, args, kwargs):
         try:
             return FORMAT % (self.terror.level(), self.doom.time(),
-                    self.iran.war(), self.iraq.war(), self.iraq.bodycount())
+                             self.iran.war(), self.iraq.war(),
+                             self.iraq.bodycount())
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: problem with query: %s' % (nick, error)
+            return u'%s: problem with query: %s' % (nick, error)
 
 
 if __name__ == '__main__':

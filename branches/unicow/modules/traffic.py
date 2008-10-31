@@ -79,22 +79,18 @@ class Main(Module):
         try:
             from_loc = self.get_location_data(args[0])
             to_loc = self.get_location_data(args[1])
-            opts = {
-                'city': from_loc[0],
-                'main': from_loc[1],
-                'cross': from_loc[2],
-            }
+            opts = {'city': from_loc[0],
+                    'main': from_loc[1],
+                    'cross': from_loc[2]}
             page = geturl(self.second_url, opts=opts, referer=self.start_url)
             origin = self.re_origin.search(page).group(1)
-            opts = {
-                'city': to_loc[0],
-                'main': to_loc[1],
-                'cross': to_loc[2],
-                'origin': origin,
-                'originCity': from_loc[0],
-                'originMain': from_loc[1],
-                'originCross': from_loc[2],
-            }
+            opts = {'city': to_loc[0],
+                    'main': to_loc[1],
+                    'cross': to_loc[2],
+                    'origin': origin,
+                    'originCity': from_loc[0],
+                    'originMain': from_loc[1],
+                    'originCross': from_loc[2]}
             page = geturl(self.report_url, opts=opts, referer=self.second_url)
             time, miles, table = self.re_trip.search(page).groups()
             rows = self.re_rows.findall(table)[2:]
@@ -110,11 +106,11 @@ class Main(Module):
                 except:
                     continue
             speeds = ', '.join(speeds)
-            return '%s: %s mins. (%s miles) [%s]' % (nick, time, miles, speeds)
+            return u'%s: %s mins. (%s miles) [%s]' % (nick, time, miles, speeds)
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: %s' % (nick, self.error)
+            return u'%s: %s' % (nick, self.error)
 
 
 if __name__ == '__main__':

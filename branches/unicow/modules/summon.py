@@ -40,7 +40,7 @@ class Main(Module):
             sendto, reason = args
             email = self.learn.lookup('email', sendto)
             if email is None:
-                return "%s: I don't know the email for %s" % (nick, sendto)
+                return u"%s: I don't know the email for %s" % (nick, sendto)
             body = 'To: %s <%s>\n' % (sendto, email)
             body += 'From: %s\n' % (self.config.smtp.sender)
             body += 'Subject: Summon from %s' % nick
@@ -52,9 +52,9 @@ class Main(Module):
                 smtp.login(self.config.smtp.user, self.config.smtp.password)
             smtp.sendmail(self.config.smtp.sender, [email], body)
 
-            return "%s: summoned %s" % (nick, sendto)
+            return u"%s: summoned %s" % (nick, sendto)
 
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return "%s: I couldn't make that summon: %s" % (nick, error)
+            return u"%s: I couldn't make that summon: %s" % (nick, error)

@@ -24,10 +24,11 @@ from include.utils import stripHTML, Module
 from include.useragent import geturl
 from urlparse import urljoin
 from include.BeautifulSoup import BeautifulSoup
-from include import rssparser
+from include import feedparser
 from learn import Main as Learn
 import logging as log
 from include.colorlib import ColorLib
+from include import encoding
 
 __version__ = '0.2'
 __author__ = 'cj_ <cjones@gruntle.org>'
@@ -49,17 +50,17 @@ class Weather(object):
 
     def forecast(self, location):
         page = geturl(url=self.search, opts={'query': location},
-                referer=self.baseurl)
+                      referer=self.baseurl)
         soup = BeautifulSoup(page)
 
         # disambiguation page
-        if 'Search Results' in str(soup):
+        if 'Search Results' in unicode(soup):
             table = soup.find('table', attrs={'class': 'dataTable'})
             tbody = soup.find('tbody')
             results = [row.findAll('td')[0].find('a')
                        for row in tbody.findAll('tr')]
-            results = [(normalize(str(result.contents[0])),
-                        urljoin(Weather.baseurl, str(result['href'])))
+            results = [(normalize(unicode(result.contents[0])),
+                        urljoin(Weather.baseurl, unicode(result['href'])))
                        for result in results]
 
             match = None
@@ -72,11 +73,18 @@ class Weather(object):
             page = geturl(url=match, referer=self.search)
             soup = BeautifulSoup(page)
 
-        title = str(soup.find('h1').string).strip()
+        title = soup.find('h1').string.strip()
         rss_url = soup.find('link', attrs=self._rss_link)['href']
-        rss = rssparser.parse(rss_url)
-        conditions = rss.entries[0].description.encode('raw-unicode-escape')
+        rss = feedparser.parse(rss_url)
+        conditions = rss.entries[0].description
+
+        # XXX ok, here's the deal. this page has raw utf-8 bytes encoded
+        # as html entities, and in some cases latin1.  this demonstrates a
+        # total misunderstanding of how unicode works on the part of the
+        # authors, so we need to jump through some hoops to make it work
+        conditions = conditions.encode('raw-unicode-escape')
         conditions = stripHTML(conditions)
+        conditions = encoding.convert(conditions)
         fields = self._bar.split(conditions)
         data = {}
         for field in fields:
@@ -107,6 +115,7 @@ class Weather(object):
             data['Temperature'] = self.colorlib.get_color(color,
                     text=data['Temperature'])
 
+            # XXX this seems ill-conceived
             if blink:
                 data['Temperature'] = '\x1b[5m' + data['Temperature'] + \
                         '\x1b[0m'
@@ -116,15 +125,14 @@ class Weather(object):
 
         output = []
         for key, val in data.items():
-            line = '%s: %s' % (key, val)
+            line = u'%s: %s' % (key, val)
             output.append(line)
-
-        output = ' | '.join(output)
-
-        return '%s: %s' % (title, output)
+        output = u' | '.join(output)
+        return u'%s: %s' % (title, output)
 
 
 class Main(Module):
+
     pattern = re.compile('^\s*(?:fc|forecast|weather)(?:\s+(.*)$)?')
     require_addressing = True
     help = 'fc [location] - look up weather forecast'
@@ -142,27 +150,24 @@ class Main(Module):
 
     def response(self, nick, args, kwargs):
 
-        try:
-            args = args[0]
-        except:
-            args = None
+        args = args[0] if args else None
 
-        if args is None or args == '' and self.learn:
+        if not args and self.learn:
             query = self.learn.lookup('location', nick)
         elif args.startswith('@') and self.learn:
             query = self.learn.lookup('location', args[1:])
         else:
             query = args
 
-        if query is None or query == '':
-            return '%s: unknown nick. %s' % (nick, USAGE)
+        if not query:
+            return u'%s: unknown nick. %s' % (nick, USAGE)
 
         try:
-            return '%s: %s' % (nick, self.weather.forecast(query))
+            return u'%s: %s' % (nick, self.weather.forecast(query))
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return "Couldn't find that place, maybe a bomb dropped on it"
+            return u"Couldn't find that place, maybe a bomb dropped on it"
 
 
 whitespace = re.compile(r'\s+')

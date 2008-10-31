@@ -25,6 +25,7 @@ from include.utils import Module
 import logging as log
 
 class Main(Module):
+
     pattern = re.compile('^\s*nslookup\s+(\S+)')
     require_addressing = True
     help = 'nslookup <ip|host> - perform DNS lookup'
@@ -42,7 +43,7 @@ class Main(Module):
                 response = socket.gethostbyname(query)
             except:
                 response = 'No IP for that hostname'
-        return '%s: %s' % (nick, response)
+        return u'%s: %s' % (nick, response)
 
 
 if __name__ == '__main__':

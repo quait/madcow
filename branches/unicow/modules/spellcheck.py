@@ -44,11 +44,11 @@ class Main(Module):
                 result = 'spelled correctly'
             else:
                 result = corrected
-            return '%s: %s' % (nick, result)
+            return u'%s: %s' % (nick, result)
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: %s' % (nick, self.error)
+            return u'%s: %s' % (nick, self.error)
 
 
 if __name__ == '__main__':

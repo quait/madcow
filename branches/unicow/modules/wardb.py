@@ -96,7 +96,7 @@ class Main(Module):
         name = name.replace('\\', '')
         name = name.strip()
         name = self.colorlib.get_color(color, text=name)
-        return '%s: %s' % (name, bonus)
+        return u'%s: %s' % (name, bonus)
 
     def response(self, nick, args, kwargs):
 
@@ -112,7 +112,7 @@ class Main(Module):
                 if response:
                     output(response)
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
 
 

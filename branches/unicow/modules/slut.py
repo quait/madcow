@@ -106,16 +106,16 @@ class Main(Module):
         try:
             query = " ".join(args)
             rating = slutrating(query)
-            return "%s is %.2f%% slutty." % (query, rating * 100)
+            return u"%s is %.2f%% slutty." % (query, rating * 100)
         except TypeError, error:
-            return "%s: Sorry, google isn't being cooperative.." % nick
+            return u"%s: Sorry, google isn't being cooperative.." % nick
         except WordFiltered, error:
-            return "%s: Hmm, google is filtering the word '%s'.." % (
+            return u"%s: Hmm, google is filtering the word '%s'.." % (
                     nick, error.word)
         except Exception, error:
             log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return '%s: I failed to perform that lookup' % nick
+            return u'%s: I failed to perform that lookup' % nick
 
 
 if __name__ == '__main__':

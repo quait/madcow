@@ -30,7 +30,7 @@ class Main(Module):
     require_addressing = True
     help = 'urban <phrase> - look up a word/phrase on urban dictionary'
     key = 'a979884b386f8b7ea781754892f08d12'
-    error = "%s: So obscure even urban dictionary doesn't know what it means"
+    error = u"%s: So obscure even urban dictionary doesn't know what it means"
 
     def __init__(self, madcow=None):
         self.server = SOAPpy.SOAPProxy("http://api.urbandictionary.com/soap")
@@ -44,27 +44,23 @@ class Main(Module):
             else:
                 i = 1
                 term = ' '.join(words)
-
-
             items = self.server.lookup(self.key, term)
-
             max = len(items)
             if max == 0:
                 return self.error % nick
 
             if i > max:
-                return '%s: CRITICAL BUFFER OVERFLOW ERROR' % nick
+                return u'%s: CRITICAL BUFFER OVERFLOW ERROR' % nick
 
             item = items[i - 1]
-            response = '%s: [%s/%s] %s - Example: %s' % (nick, i, max,
-                    item.definition, item.example)
-            response = stripHTML(response)
-            return response.encode("utf-8")
+            response = u'%s: [%s/%s] %s - Example: %s' % (
+                    nick, i, max, item.definition, item.example)
+            return stripHTML(response)
 
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return "%s: Serious problems: %s" % (nick, error)
+            return u"%s: Serious problems: %s" % (nick, error)
 
 
 if __name__ == '__main__':
