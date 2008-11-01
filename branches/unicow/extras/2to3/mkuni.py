@@ -3,6 +3,8 @@
 import sys
 import optparse
 import os
+import tempfile
+import subprocess
 
 def paths():
     for arg in optparse.OptionParser().parse_args()[1]:
@@ -65,14 +67,23 @@ def fix():
                             isuni = False
                 elif isquote:
                     start = pos
-                    if prev == 'u':
+                    if prev in ('r', 'u'):
                         isuni = True
                 pos += 1
             fixed = fixed.replace('str(', 'unicode(')
             fixed_lines.append(fixed)
         fixed = '\n'.join(fixed_lines) + '\n'
-        with open(path, 'wb') as file:
-            file.write(fixed)
+        fd, tmp = tempfile.mkstemp()
+        os.write(fd, fixed)
+        os.close(fd)
+        args = ['diff', '-u', path, tmp]
+        process = subprocess.Popen(args, stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT)
+        diff = process.stdout.read()
+        os.remove(tmp)
+
+        diff = diff.replace('+++ ' + tmp, '+++ ' + path)
+        print diff
 
 
 def main():
