@@ -26,18 +26,18 @@ import logging as log
 
 class Main(Module):
 
-    pattern = re.compile('^\s*chp\s+(.+)', re.I)
+    pattern = re.compile(u'^\s*chp\s+(.+)', re.I)
     require_addressing = True
-    help = 'chp <highway> - look for CHP reports for highway, such as 101'
-    url = 'http://cad.chp.ca.gov/sa_list.asp?centerin=GGCC&style=l'
-    incidents = re.compile('<tr>(.*?)</tr>', re.DOTALL)
-    data = re.compile('<td class="T".*?>(.*?)</td>')
-    clean = re.compile('[^0-9a-z ]', re.I)
+    help = u'chp <highway> - look for CHP reports for highway, such as 101'
+    url = u'http://cad.chp.ca.gov/sa_list.asp?centerin=GGCC&style=l'
+    incidents = re.compile(u'<tr>(.*?)</tr>', re.DOTALL)
+    data = re.compile(u'<td class="T".*?>(.*?)</td>')
+    clean = re.compile(u'[^0-9a-z ]', re.I)
 
     def response(self, nick, args, kwargs):
         query = args[0]
         try:
-            check = self.clean.sub('', query)
+            check = self.clean.sub(u'', query)
             check = re.compile(check, re.I)
             results = []
             doc = geturl(self.url)
@@ -54,11 +54,11 @@ class Main(Module):
             else:
                 return u'%s: No incidents found' % nick
         except Exception, error:
-            log.warn('error in module %s' % self.__module__)
+            log.warn(u'error in module %s' % self.__module__)
             log.exception(error)
             return u'%s: I failed to perform that lookup' % nick
 
 
-if __name__ == '__main__':
+if __name__ == u'__main__':
     from include.utils import test_module
     test_module(Main)

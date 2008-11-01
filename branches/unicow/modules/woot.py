@@ -26,10 +26,10 @@ import logging as log
 
 class Main(Module):
 
-    pattern = re.compile('^\s*woot\s*$', re.I)
+    pattern = re.compile(u'^\s*woot\s*$', re.I)
     require_addressing = True
-    help = 'woot - get latest offer from woot.com'
-    url = 'http://woot.com/Blog/Rss.aspx'
+    help = u'woot - get latest offer from woot.com'
+    url = u'http://woot.com/Blog/Rss.aspx'
     max = 200
     break_re = re.compile(r'\s*[\r\n]+\s*')
 
@@ -39,16 +39,16 @@ class Main(Module):
             entry = rss.entries[3]
             title, summary, link = map(
                     stripHTML, [entry.title, entry.summary, entry.link])
-            summary = self.break_re.sub(' ', summary)
+            summary = self.break_re.sub(u' ', summary)
             if len(summary) > self.max:
-                summary = summary[:self.max - 4] + ' ...'
+                summary = summary[:self.max - 4] + u' ...'
             return u'%s [%s] %s' % (title, link, summary)
         except Exception, error:
-            log.warn('error in module %s' % self.__module__)
+            log.warn(u'error in module %s' % self.__module__)
             log.exception(error)
             return u'%s: error reading woot page' % nick
 
 
-if __name__ == '__main__':
+if __name__ == u'__main__':
     from include.utils import test_module
     test_module(Main)

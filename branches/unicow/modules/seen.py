@@ -33,15 +33,15 @@ class Main(Module):
     terminate = False
     allow_threading = False
     require_addressing = False
-    help = 'seen <nick> - query bot about last time someone was seen speaking'
-    seen = re.compile('^\s*seen\s+(\S+)\s*$', re.I)
+    help = u'seen <nick> - query bot about last time someone was seen speaking'
+    seen = re.compile(u'^\s*seen\s+(\S+)\s*$', re.I)
 
     def __init__(self, madcow):
         self.dbfile = os.path.join(madcow.prefix,
-                'data/db-%s-seen' % madcow.namespace)
+                u'data/db-%s-seen' % madcow.namespace)
 
     def dbm(self):
-        return anydbm.open(self.dbfile, 'c', 0640)
+        return anydbm.open(self.dbfile, u'c', 0640)
 
     def get(self, user):
         user = user.lower()
@@ -49,38 +49,38 @@ class Main(Module):
         try:
             packed = db[user]
             db.close()
-            channel, last, message = packed.split('/', 2)
+            channel, last, message = packed.split(u'/', 2)
 
             seconds = int(time.time() - float(last))
-            last = '%s second%s' % (seconds, 's' * (seconds != 1))
+            last = u'%s second%s' % (seconds, u's' * (seconds != 1))
 
             minutes = seconds / 60
             seconds = seconds % 60
             if minutes:
-                last = '%s minute%s' % (minutes, 's' * (minutes != 1))
+                last = u'%s minute%s' % (minutes, u's' * (minutes != 1))
 
             hours = minutes / 60
             minutes = minutes % 60
             if hours:
-                last = '%s hour%s' % (hours, 's' * (hours != 1))
+                last = u'%s hour%s' % (hours, u's' * (hours != 1))
 
             days = hours / 24
             hours = hours % 24
             if days:
-                last = '%s day%s' % (days, 's' * (days != 1))
+                last = u'%s day%s' % (days, u's' * (days != 1))
 
             return message, channel, last
         except:
             return None, None, None
 
     def set(self, nick, channel, message):
-        packed = '%s/%s/%s' % (channel, time.time(), message)
+        packed = u'%s/%s/%s' % (channel, time.time(), message)
         db = self.dbm()
         db[nick.lower()] = packed
         db.close()
 
     def response(self, nick, args, kwargs):
-        channel = kwargs['channel']
+        channel = kwargs[u'channel']
         line = args[0]
 
         try:
@@ -95,5 +95,5 @@ class Main(Module):
             return u'%s: %s was last seen %s ago on %s saying "%s"' % (
                     nick, user, last, channel, message)
         except Exception, error:
-            log.warn('error in module %s' % self.__module__)
+            log.warn(u'error in module %s' % self.__module__)
             log.exception(error)

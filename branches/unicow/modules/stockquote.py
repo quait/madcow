@@ -29,11 +29,11 @@ import logging as log
 from include.colorlib import ColorLib
 import locale
 
-__version__ = '0.3'
-__author__ = 'cj_ <cjones@gruntle.org>'
+__version__ = u'0.3'
+__author__ = u'cj_ <cjones@gruntle.org>'
 
-_namespace = 'madcow'
-_dir = '..'
+_namespace = u'madcow'
+_dir = u'..'
 
 class UnknownSymbol(Exception):
 
@@ -42,84 +42,84 @@ class UnknownSymbol(Exception):
 
 class Yahoo(object):
 
-    _quote_url = 'http://finance.yahoo.com/q?s=SYMBOL'
+    _quote_url = u'http://finance.yahoo.com/q?s=SYMBOL'
     _isfloat = re.compile(r'^\s*-?\s*[0-9.,]+\s*$')
 
     def __init__(self, colorlib):
         self.colorlib = colorlib
 
     def get_quote(self, symbol):
-        url = Yahoo._quote_url.replace('SYMBOL', symbol)
+        url = Yahoo._quote_url.replace(u'SYMBOL', symbol)
         page = geturl(url)
         soup = BeautifulSoup(page)
-        company = ' '.join([str(item) for item in soup.find('h1').contents])
+        company = u' '.join([unicode(item) for item in soup.find(u'h1').contents])
         company = stripHTML(company)
-        tables = soup.findAll('table')
+        tables = soup.findAll(u'table')
         if not tables:
             raise UnknownSymbol
         table = tables[0]
-        rows = table.findAll('tr')
+        rows = table.findAll(u'tr')
         data = {}
         current_price = 0.0
         last_price = 0.0
 
         # Yahoo emits numbers in the US format of course..
-        locale.setlocale(locale.LC_NUMERIC, "en_US.UTF-8")
+        locale.setlocale(locale.LC_NUMERIC, u"en_US.UTF-8")
         for row in rows:
-            key, val = row.findAll('td')
-            key = str(key.contents[0])
+            key, val = row.findAll(u'td')
+            key = unicode(key.contents[0])
 
-            if key in ('Last Trade:', 'Index Value:'):
-                current_price = locale.atof(stripHTML(str(val)))
-            elif key == 'Prev Close:':
-                last_price = locale.atof(stripHTML(str(val)))
+            if key in (u'Last Trade:', u'Index Value:'):
+                current_price = locale.atof(stripHTML(unicode(val)))
+            elif key == u'Prev Close:':
+                last_price = locale.atof(stripHTML(unicode(val)))
 
         # calculate change
         delta = current_price - last_price
         delta_perc = 100 * delta / last_price
 
-        otext = "Open: %.2f" % last_price
-        ptext = "%.2f (%+.2f %+.2f%%)" % (current_price, delta, delta_perc)
+        otext = u"Open: %.2f" % last_price
+        ptext = u"%.2f (%+.2f %+.2f%%)" % (current_price, delta, delta_perc)
         if delta > 0:
-            ptext = self.colorlib.get_color('green', text=ptext)
+            ptext = self.colorlib.get_color(u'green', text=ptext)
         elif delta < 0:
-            ptext = self.colorlib.get_color('red', text=ptext)
-        ptext = "Current: " + ptext
+            ptext = self.colorlib.get_color(u'red', text=ptext)
+        ptext = u"Current: " + ptext
 
         data = [otext, ptext]
 
         # grab after hours data if it's available
-        quotepara = soup.findAll('p')[1]
-        if "After Hours:" in quotepara.contents[0]:
+        quotepara = soup.findAll(u'p')[1]
+        if u"After Hours:" in quotepara.contents[0]:
             try:
-                after_hours = float(quotepara.findAll('span')[0].contents[0])
+                after_hours = float(quotepara.findAll(u'span')[0].contents[0])
                 ah_delta = after_hours - current_price
                 ah_delta_perc = ah_delta / current_price * 100
-                ahtext = '%.2f (%+.2f %+.2f%%)' % (
+                ahtext = u'%.2f (%+.2f %+.2f%%)' % (
                         after_hours, ah_delta, ah_delta_perc)
                 if ah_delta > 0:
-                    ahtext = self.colorlib.get_color('green', text=ahtext)
+                    ahtext = self.colorlib.get_color(u'green', text=ahtext)
                 elif ah_delta < 0:
-                    ahtext = self.colorlib.get_color('red', text=ahtext)
-                ahtext = "After Hours: " + ahtext
+                    ahtext = self.colorlib.get_color(u'red', text=ahtext)
+                ahtext = u"After Hours: " + ahtext
                 data.append(ahtext)
             except ValueError:
                 pass
 
-        return '%s - ' % company + ' | '.join(data)
+        return u'%s - ' % company + u' | '.join(data)
 
 
 class Main(Module):
 
-    pattern = re.compile('^\s*(?:stocks?|quote)\s+(\S+)', re.I)
+    pattern = re.compile(u'^\s*(?:stocks?|quote)\s+(\S+)', re.I)
     require_addressing = True
-    help = 'quote <symbol> - get latest stock quote'
+    help = u'quote <symbol> - get latest stock quote'
 
     def __init__(self, madcow=None):
         if madcow is not None:
             colorlib = madcow.colorlib
         else:
-            colorlib = ColorLib('ansi')
+            colorlib = ColorLib(u'ansi')
         self.yahoo = Yahoo(colorlib)
 
     def response(self, nick, args, kwargs):
@@ -129,12 +129,12 @@ class Main(Module):
         except UnknownSymbol:
             response = u"Symbol not found, market may have crashed"
         except Exception, error:
-            log.warn('error in module %s' % self.__module__)
+            log.warn(u'error in module %s' % self.__module__)
             log.exception(error)
             response = u'%s: %s' % (nick, error)
         return response
 
 
-if __name__ == '__main__':
+if __name__ == u'__main__':
     from include.utils import test_module
     test_module(Main)

@@ -27,7 +27,7 @@ import logging as log
 import encoding
 import google
 
-AGENT = 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)'
+AGENT = u'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)'
 VERSION = sys.version_info[0] * 10 + sys.version_info[1]
 UA = None
 
@@ -43,21 +43,21 @@ class UserAgent(object):
             handlers.append(urllib2.HTTPCookieProcessor)
         self.opener = urllib2.build_opener(*handlers)
         if agent:
-            self.opener.addheaders = [('User-Agent', agent)]
+            self.opener.addheaders = [(u'User-Agent', agent)]
 
     def open(self, url, opts=None, data=None, referer=None, size=-1,
              timeout=-1):
         """Open URL and return unicode content"""
-        log.debug('fetching url: %s' % url)
+        log.debug(u'fetching url: %s' % url)
         url = list(urlparse.urlparse(url))
         if opts:
             query = [urllib.urlencode(opts)]
             if url[4]:
                 query.append(url[4])
-            url[4] = '&'.join(query)
+            url[4] = u'&'.join(query)
         request = urllib2.Request(urlparse.urlunparse(url), data)
         if referer:
-            request.add_header('Referer', referer)
+            request.add_header(u'Referer', referer)
         if timeout == -1:
             timeout = self.timeout
         args = [request]

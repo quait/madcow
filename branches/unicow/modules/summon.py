@@ -29,7 +29,7 @@ class Main(Module):
 
     pattern = re.compile(r'^\s*summons?\s+(\S+)(?:\s+(.*?))?\s*$')
     require_addressing = True
-    help = 'summon <nick> [reason] - summon user'
+    help = u'summon <nick> [reason] - summon user'
 
     def __init__(self, madcow):
         self.learn = Learn(madcow)
@@ -38,14 +38,14 @@ class Main(Module):
     def response(self, nick, args, kwargs):
         try:
             sendto, reason = args
-            email = self.learn.lookup('email', sendto)
+            email = self.learn.lookup(u'email', sendto)
             if email is None:
                 return u"%s: I don't know the email for %s" % (nick, sendto)
-            body = 'To: %s <%s>\n' % (sendto, email)
-            body += 'From: %s\n' % (self.config.smtp.sender)
-            body += 'Subject: Summon from %s' % nick
-            body += '\n'
-            body += 'You were summoned by %s. Reason: %s' % (nick, reason)
+            body = u'To: %s <%s>\n' % (sendto, email)
+            body += u'From: %s\n' % (self.config.smtp.sender)
+            body += u'Subject: Summon from %s' % nick
+            body += u'\n'
+            body += u'You were summoned by %s. Reason: %s' % (nick, reason)
 
             smtp = SMTP(self.config.smtp.server)
             if len(self.config.smtp.user):
@@ -55,6 +55,6 @@ class Main(Module):
             return u"%s: summoned %s" % (nick, sendto)
 
         except Exception, error:
-            log.warn('error in module %s' % self.__module__)
+            log.warn(u'error in module %s' % self.__module__)
             log.exception(error)
             return u"%s: I couldn't make that summon: %s" % (nick, error)

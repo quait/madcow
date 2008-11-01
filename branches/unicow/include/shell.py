@@ -23,21 +23,21 @@ import tty
 import os
 from select import select
 
-__version__ = '0.1'
-__author__ = 'cj_ <cjones@gruntle.org>'
-__all__ = ['Shell']
+__version__ = u'0.1'
+__author__ = u'cj_ <cjones@gruntle.org>'
+__all__ = [u'Shell']
 
 class Shell(object):
     """Simple shell emulation.. might not work everywhere"""
-    
-    linefeed = '\r\n'
-    backspace = '\x08\x7f'
-    quit = '\x03\x04'
-    ansi = '\x1b['
-    up = ansi + 'A'
-    down = ansi + 'B'
-    right = ansi + 'C'
-    left = ansi + 'D'
+
+    linefeed = u'\r\n'
+    backspace = u'\x08\x7f'
+    quit = u'\x03\x04'
+    ansi = u'\x1b['
+    up = ansi + u'A'
+    down = ansi + u'B'
+    right = ansi + u'C'
+    left = ansi + u'D'
 
     def __init__(self, polls=[]):
         self.polls = list(polls)
@@ -50,9 +50,9 @@ class Shell(object):
         self.history = unique
         self.history.reverse()
 
-    def readline(self, prompt='', fo=sys.stdout):
-        line = ''
-        buf = ''
+    def readline(self, prompt=u'', fo=sys.stdout):
+        line = u''
+        buf = u''
         history = list(self.history)
         history.append(line)
         history.reverse()
@@ -63,8 +63,8 @@ class Shell(object):
         def redraw():
             new = prompt + line
             padding = 80 - len(new)
-            fo.write('\r' + new)
-            fo.write(' ' * padding)
+            fo.write(u'\r' + new)
+            fo.write(u' ' * padding)
             fo.write(self.left * padding)
             fo.flush()
 
@@ -78,11 +78,11 @@ class Shell(object):
                 if stdin in select([stdin], [], [], 0.1)[0]:
                     ch = os.read(stdin, 1)
                 else:
-                    ch = ''
+                    ch = u''
                 if ch is not None and not len(ch):
                     continue
                 if ch in self.quit:
-                    line = 'quit'
+                    line = u'quit'
                     redraw()
                     fo.write(self.linefeed)
                     fo.flush()
@@ -94,12 +94,12 @@ class Shell(object):
                 if ch in self.backspace:
                     if len(line):
                         line = line[:-1]
-                        fo.write(self.left + ' ' + self.left)
+                        fo.write(self.left + u' ' + self.left)
                         fo.flush()
                     continue
                 buf += ch
                 if buf == self.up:
-                    buf = ''
+                    buf = u''
                     if self.history:
                         if pos == 0:
                             history[0] = line
@@ -110,7 +110,7 @@ class Shell(object):
                         redraw()
                     continue
                 elif buf == self.down:
-                    buf = ''
+                    buf = u''
                     if history:
                         pos -= 1
                         if pos < 0:
@@ -121,14 +121,14 @@ class Shell(object):
                 elif buf == self.ansi[:len(buf)]:
                     continue
                 elif buf.startswith(self.ansi):
-                    buf = ''
+                    buf = u''
                     post = 0
                     continue
                 pos = 0
                 fo.write(buf)
                 fo.flush()
                 line += buf
-                buf = ''
+                buf = u''
             if len(line):
                 self.add_history(line)
             return line
@@ -138,12 +138,12 @@ class Shell(object):
 
 def main():
     sh = Shell()
-    prompt = '>>> '
+    prompt = u'>>> '
     while True:
         input = sh.readline(prompt)
-        if input == 'quit':
+        if input == u'quit':
             break
-        print 'got: %s' % repr(input)
+        print u'got: %s' % repr(input)
 
-if __name__ == '__main__':
+if __name__ == u'__main__':
     sys.exit(main())

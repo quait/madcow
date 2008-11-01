@@ -28,19 +28,19 @@ import logging as log
 
 class Main(Module):
 
-    pattern = re.compile('^\s*bbcnews(?:\s+(.+))?', re.I)
+    pattern = re.compile(u'^\s*bbcnews(?:\s+(.+))?', re.I)
     require_addressing = True
-    help = 'bbcnews <string> - Searches the BBC News Website'
-    _error = 'Looks like the BBC aren\'t co-operating today.'
-    _api_url = 'http://newsapi.bbc.co.uk/'
-    _search_url = urljoin(_api_url, '/feeds/search/news/')
-    _rss_url = 'http://newsrss.bbc.co.uk/'
-    _world_url = urljoin(_rss_url, '/rss/newsonline_uk_edition/world/rss.xml')
+    help = u'bbcnews <string> - Searches the BBC News Website'
+    _error = u'Looks like the BBC aren\'t co-operating today.'
+    _api_url = u'http://newsapi.bbc.co.uk/'
+    _search_url = urljoin(_api_url, u'/feeds/search/news/')
+    _rss_url = u'http://newsrss.bbc.co.uk/'
+    _world_url = urljoin(_rss_url, u'/rss/newsonline_uk_edition/world/rss.xml')
 
     def response(self, nick, args, kwargs):
         query = args[0]
         try:
-            if not query or query == 'headline':
+            if not query or query == u'headline':
                 url = self._world_url
             else:
                 url = self._search_url + urllib.quote(query)
@@ -49,11 +49,11 @@ class Main(Module):
                                    [item.link, item.title, item.description]))
 
         except Exception, error:
-            log.warn('error in module %s' % self.__module__)
+            log.warn(u'error in module %s' % self.__module__)
             log.exception(error)
             return u'%s: %s' % (nick, self._error)
 
 
-if __name__ == '__main__':
+if __name__ == u'__main__':
     from include.utils import test_module
     test_module(Main)

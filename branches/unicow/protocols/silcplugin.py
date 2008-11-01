@@ -35,9 +35,9 @@ from time import sleep, time as unix_time
 class SilcPlugin(madcow.Madcow, silc.SilcClient):
 
     def __init__(self, config, prefix):
-        self.colorlib = ColorLib('mirc')
+        self.colorlib = ColorLib(u'mirc')
         madcow.Madcow.__init__(self, config, prefix)
-        keys = silc.create_key_pair('silc.pub', 'silc.priv', passphrase='')
+        keys = silc.create_key_pair(u'silc.pub', u'silc.priv', passphrase=u'')
         nick = self.config.silcplugin.nick
         silc.SilcClient.__init__(self, keys, nick, nick, nick)
         self.channels = self._delim.split(self.config.silcplugin.channels)
@@ -50,7 +50,7 @@ class SilcPlugin(madcow.Madcow, silc.SilcClient):
         return self.config.silcplugin.nick
 
     def connect(self):
-        log.info('connecting to %s:%s' % (self.config.silcplugin.host,
+        log.info(u'connecting to %s:%s' % (self.config.silcplugin.host,
                                           self.config.silcplugin.port))
         self.connect_to_server(self.config.silcplugin.host,
                                self.config.silcplugin.port)
@@ -66,7 +66,7 @@ class SilcPlugin(madcow.Madcow, silc.SilcClient):
                 self.running = False
                 break
             except Exception, error:
-                log.error('exception caught in silc loop')
+                log.error(u'exception caught in silc loop')
                 log.exception(error)
             time.sleep(0.2)
 
@@ -84,7 +84,7 @@ class SilcPlugin(madcow.Madcow, silc.SilcClient):
         if private:
             req.addressed = True
             req.sendto = sender
-            req.channel = 'privmsg'
+            req.channel = u'privmsg'
         else:
             req.addressed = False
             req.sendto = channel
@@ -93,7 +93,7 @@ class SilcPlugin(madcow.Madcow, silc.SilcClient):
         req.message = self.colorlib.strip_color(req.message)
         self.check_addressing(req)
 
-        if req.message.startswith('^'):
+        if req.message.startswith(u'^'):
             req.message = req.message[1:]
             req.colorize = True
         else:
@@ -105,15 +105,15 @@ class SilcPlugin(madcow.Madcow, silc.SilcClient):
     # not much of a point recovering from a kick when the silc code
     # just segfaults on you :/
     #def notify_kicked(self, kicked, reason, kicker, channel):
-    #  print 'SILC: Notify (Kick):', kicked, reason, kicker, channel
+    #  print u'SILC: Notify (Kick):', kicked, reason, kicker, channel
 
     def connected(self):
-        log.info('* Connected')
+        log.info(u'* Connected')
         for channel in self.channels:
-            self.command_call('JOIN %s' % channel)
+            self.command_call(u'JOIN %s' % channel)
 
     def disconnected(self, msg):
-        log.warn('* Disconnected: %s' % msg)
+        log.warn(u'* Disconnected: %s' % msg)
         if self.config.silcplugin.reconnect:
             time.sleep(self.config.silcplugin.reconnectWait)
             self.connect()
@@ -130,7 +130,7 @@ class SilcPlugin(madcow.Madcow, silc.SilcClient):
         # going to get encoded into raw bytes anyway.  i suspect it's
         # doing that encoding internally and totally disregarding our
         # wishes in what character set it uses
-        message = message.decode(self.config.main.charset, 'ignore')
+        message = message.decode(self.config.main.charset, u'ignore')
 
         if req.colorize:
             message = self.colorlib.rainbow(message)

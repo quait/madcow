@@ -6,7 +6,7 @@ import codecs
 import chardet
 import logging as log
 
-DEFAULT = 'ascii'
+DEFAULT = u'ascii'
 meta_re = re.compile(r'<meta\s+(.*?)\s*>', re.I | re.DOTALL)
 attr_re = re.compile(r'\s*([a-zA-Z_][-.:a-zA-Z_0-9]*)(\s*=\s*(\'[^\']*\'|"[^"'
                      r']*"|[-a-zA-Z0-9./,:;+*%?!&$\(\)_#=~@]*))?')
@@ -14,7 +14,7 @@ attr_re = re.compile(r'\s*([a-zA-Z_][-.:a-zA-Z_0-9]*)(\s*=\s*(\'[^\']*\'|"[^"'
 def convert(data, headers=None):
     """Return unicode object of data"""
     if isinstance(data, str):
-        data = data.decode(detect(data, headers), 'replace')
+        data = data.decode(detect(data, headers), u'replace')
     return data
 
 
@@ -24,27 +24,27 @@ def detect(data, headers=None):
     # try to figure out the encoding first from meta tags
     charset = metacharset(data)
     if charset:
-        log.debug('using http meta header encoding: %s' % charset)
+        log.debug(u'using http meta header encoding: %s' % charset)
         return charset
 
-    # if that doesn't work, see if there's a real http header
+    # if that doesnu't work, see if there's a real http header
     if headers and headers.plist:
         charset = headers.plist[0]
         attrs = parseattrs(charset)
-        if 'charset' in attrs:
-            charset = lookup(attrs['charset'])
+        if u'charset' in attrs:
+            charset = lookup(attrs[u'charset'])
         if charset:
-            log.debug('using http header encoding: %s' % charset)
+            log.debug(u'using http header encoding: %s' % charset)
             return charset
 
     # that didn't work, try chardet library
-    charset = lookup(chardet.detect(data)['encoding'])
+    charset = lookup(chardet.detect(data)[u'encoding'])
     if charset:
-        log.debug('detected encoding: %s' % repr(charset))
+        log.debug(u'detected encoding: %s' % repr(charset))
         return charset
 
     # if that managed to fail, just use ascii
-    log.warn("couldn't detect encoding, using ascii")
+    log.warn(u"couldn't detect encoding, using ascii")
     return DEFAULT
 
 
@@ -60,13 +60,13 @@ def metacharset(data):
     """Parse data for HTML meta character encoding"""
     for meta in meta_re.findall(data):
         attrs = parseattrs(meta)
-        if ('http-equiv' in attrs and
-            attrs['http-equiv'].lower() == 'content-type' and
-            'content' in attrs):
-            content = attrs['content']
+        if (u'http-equiv' in attrs and
+            attrs[u'http-equiv'].lower() == u'content-type' and
+            u'content' in attrs):
+            content = attrs[u'content']
             content = parseattrs(content)
-            if 'charset' in content:
-                return lookup(content['charset'])
+            if u'charset' in content:
+                return lookup(content[u'charset'])
 
 
 def parseattrs(data):
