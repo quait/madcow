@@ -20,7 +20,7 @@
 """Scrape BBC news"""
 
 import re
-from include import rssparser
+from include import feedparser
 from include.utils import Module, stripHTML
 import urllib
 from urlparse import urljoin
@@ -44,7 +44,7 @@ class Main(Module):
                 url = self._world_url
             else:
                 url = self._search_url + urllib.quote(query)
-            item = rssparser.parse(url).entries[0]
+            item = feedparser.parse(url).entries[0]
             return u' | '.join(map(stripHTML,
                                    [item.link, item.title, item.description]))
 

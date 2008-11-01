@@ -20,7 +20,7 @@
 """NEVAR FORGET"""
 
 import re
-from include import rssparser
+from include import feedparser
 from include.utils import Module, stripHTML
 from include.useragent import geturl
 from include.BeautifulSoup import BeautifulSoup
@@ -37,13 +37,11 @@ class Terror(object):
 
     _url = 'http://www.dhs.gov/dhspublic/getAdvisoryCondition'
     _re_level = re.compile(r'<THREAT_ADVISORY CONDITION="(\w+)" />')
-    _color_map = {
-        'severe': 'red',
-        'high': 'orange',
-        'elevated': 'bright yellow',
-        'guarded': 'bright blue',
-        'low': 'bright green',
-    }
+    _color_map = {'severe': 'red',
+                  'high': 'orange',
+                  'elevated': 'bright yellow',
+                  'guarded': 'bright blue',
+                  'low': 'bright green'}
 
     def __init__(self, colorlib):
         self.colorlib = colorlib
@@ -55,9 +53,9 @@ class Terror(object):
             color = self._color_map[level.lower()]
             return self.colorlib.get_color(color, text=level)
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return 'UNKNOWN'
+            return u'UNKNOWN'
 
 
 class DoomsDay(object):
@@ -68,12 +66,12 @@ class DoomsDay(object):
     def time(self):
         try:
             doc = geturl(DoomsDay._url)
-            time = DoomsDay._re_time.search(doc).group(1)
+            time = self._re_time.search(doc).group(1)
             return time
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return 'UNKNOWN'
+            return u'UNKNOWN'
 
 
 class IranWar(object):
@@ -82,12 +80,12 @@ class IranWar(object):
 
     def war(self):
         try:
-            rss = rssparser.parse(IranWar._url)
-            return rss.entries[0].title.encode(rss.encoding)
+            rss = feedparser.parse(self._url)
+            return rss.entries[0].title
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return 'UNKNOWN'
+            return u'UNKNOWN'
 
 
 class IraqWar(object):
@@ -98,28 +96,28 @@ class IraqWar(object):
 
     def war(self):
         try:
-            rss = rssparser.parse(IraqWar._war_url)
-            return rss.entries[0].title.encode(rss.encoding)
+            rss = feedparser.parse(self._war_url)
+            return rss.entries[0].title
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return 'UNKNOWN'
+            return u'UNKNOWN'
 
     def bodycount(self):
         try:
-            doc = geturl(IraqWar._bodycount_url)
+            doc = geturl(self._bodycount_url)
             soup = BeautifulSoup(doc)
             data = soup.find('td', attrs={'class': 'main-num'})
             data = data.find('a')
-            data = str(data.contents[0])
+            data = unicode(data.contents[0])
             data = stripHTML(data)
-            data = IraqWar._re_whitespace.sub(' ', data)
+            data = self._re_whitespace.sub(u' ', data)
             data = data.strip()
             return data
         except Exception, error:
-            log.warn('error in %s: %s' % (self.__module__, error))
+            log.warn('error in module %s' % self.__module__)
             log.exception(error)
-            return 'UNKNOWN'
+            return u'UNKNOWN'
 
 
 class Main(Module):
