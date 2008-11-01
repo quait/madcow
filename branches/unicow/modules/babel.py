@@ -71,7 +71,7 @@ class Main(Module):
         """Parse command structure and transform text"""
         if u':' not in cmd:
             raise BabelError(u'missing text to translate')
-        cmd, text = map(str.strip, cmd.split(u':'))
+        cmd, text = map(unicode.strip, cmd.split(u':'))
         cmd = cmd.lower().split()
 
         translations = []
