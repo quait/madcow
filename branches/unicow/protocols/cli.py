@@ -47,6 +47,7 @@ class ConsoleProtocol(Madcow):
             self.check_response_queue()
             try:
                 input = self.shell.readline(self._prompt)
+                # XXX ok we got some raw byteage.. wtf do we do with it?
             except IOError:
                 # this happens when you get EINTR from SIGHUP handling
                 continue
