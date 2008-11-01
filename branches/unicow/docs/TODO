@@ -63,3 +63,29 @@
 
 - convert filter and map functions to use list comprehensions per psyco
   recommendation.
+
+
+========= problems after converting to pure unicode =============
+
+unicode error:
+
+babel.py
+
+** shell has issues with unicode!
+
+# seems related to BS
+
+woot.py
+weather.py
+stockquote.py
+
+*** stuff i noticed:
+
+history should do something fancier than dump the repr of the list
+traffic.py has issues when you enter grabage.. expected, but probably don't want unbound local error.
+optparse help shows random useless files for protocols.. fix that shiz
+
+
+=== thoughts:
+
+writing to raw sockets?  irc, silc, aim needs to be thoroughly vetted for issues
