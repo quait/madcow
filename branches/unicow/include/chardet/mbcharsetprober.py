@@ -15,12 +15,12 @@
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-#
+# 
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
-#
+# 
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
@@ -36,7 +36,7 @@ class MultiByteCharSetProber(CharSetProber):
         CharSetProber.__init__(self)
         self._mDistributionAnalyzer = None
         self._mCodingSM = None
-        self._mLastChar = [u'\x00', u'\x00']
+        self._mLastChar = ['\x00', '\x00']
 
     def reset(self):
         CharSetProber.reset(self)
@@ -44,7 +44,7 @@ class MultiByteCharSetProber(CharSetProber):
             self._mCodingSM.reset()
         if self._mDistributionAnalyzer:
             self._mDistributionAnalyzer.reset()
-        self._mLastChar = [u'\x00', u'\x00']
+        self._mLastChar = ['\x00', '\x00']
 
     def get_charset_name(self):
         pass
@@ -55,7 +55,7 @@ class MultiByteCharSetProber(CharSetProber):
             codingState = self._mCodingSM.next_state(aBuf[i])
             if codingState == eError:
                 if constants._debug:
-                    sys.stderr.write(self.get_charset_name() + u' prober hit error at byte ' + unicode(i) + u'\n')
+                    sys.stderr.write(self.get_charset_name() + ' prober hit error at byte ' + str(i) + '\n')
                 self._mState = constants.eNotMe
                 break
             elif codingState == eItsMe:
@@ -68,9 +68,9 @@ class MultiByteCharSetProber(CharSetProber):
                     self._mDistributionAnalyzer.feed(self._mLastChar, charLen)
                 else:
                     self._mDistributionAnalyzer.feed(aBuf[i-1:i+1], charLen)
-
+                    
         self._mLastChar[0] = aBuf[aLen - 1]
-
+        
         if self.get_state() == constants.eDetecting:
             if self._mDistributionAnalyzer.got_enough_data() and \
                (self.get_confidence() > constants.SHORTCUT_THRESHOLD):
