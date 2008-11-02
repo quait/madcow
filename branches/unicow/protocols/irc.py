@@ -26,9 +26,11 @@ import logging as log
 from time import sleep, time as unix_time
 
 class IRCProtocol(Madcow):
+
     """Implements IRC protocol for madcow"""
 
-    events = [u'welcome', u'disconnect', u'kick', u'privmsg', u'pubmsg', u'namreply']
+    events = [u'welcome', u'disconnect', u'kick', u'privmsg', u'pubmsg',
+              u'namreply']
 
     def __init__(self, config, prefix):
         self.colorlib = ColorLib(u'mirc')
