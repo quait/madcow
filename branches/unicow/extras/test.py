@@ -31,8 +31,8 @@ tests = {
             u'result': u'test: google = http://www.google.com/',
             },
         u'lyrics': {
-            u'request': u'sing around the world daft punk',
-            u'result': re.compile(r'Around the world, around the world'),
+            u'request': u'sing 1979',
+            u'result': re.compile(r'Shakedown 1979'),
             },
         u'bbcnews': {
             u'request': u'bbcnews',
@@ -94,8 +94,7 @@ tests = {
                 u'request': u'terror',
                 u'result': re.compile(
                     u'Terror: \x1b\[1;33m.*?\x1b\[0m, DoomsDay: It is \d+ Minu'
-                    u'tes to Midnight, IranWar: .*?, IraqWar: .*?, BodyCount: '
-                    u'[0-9 ,-]+\s*$'),
+                    u'tes to Midnight, IranWar: .*?, IraqWar: .*?, BodyCount'),
                 },
         u'urban': {
                 u'request': u'urban penis',
