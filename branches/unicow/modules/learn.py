@@ -33,6 +33,7 @@ class Main(Module):
     _allowed = [u'location', u'email', u'karma']
 
     def __init__(self, madcow=None):
+        self.charset = madcow.charset
         self.prefix = madcow.prefix
         self.namespace = madcow.namespace
 
@@ -46,25 +47,28 @@ class Main(Module):
 
     def get_db(self, db):
         dbm = self.dbm(db)
-        db = {}
-        for key in dbm.keys():
-            db[key] = dbm[key]
-        dbm.close()
-        return db
+        try:
+            return dict(dbm)
+        finally:
+            dbm.close()
 
     def lookup(self, db, key):
         dbm = self.dbm(db)
         try:
-            val = dbm[key.lower()]
-        except:
-            val = None
-        dbm.close()
-        return val
+            key = key.lower().encode(self.charset, 'replace')
+            if key in dbm:
+                return dbm[key].decode(self.charset, 'replace')
+        finally:
+            dbm.close()
 
     def set(self, db, key, val):
         dbm = self.dbm(db)
-        dbm[key.lower()] = val
-        dbm.close()
+        try:
+            key = key.lower().encode(self.charset, 'replace')
+            val = val.encode(self.charset, 'replace')
+            dbm[key] = val
+        finally:
+            dbm.close()
 
     def response(self, nick, args, kwargs):
         try:

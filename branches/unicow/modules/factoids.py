@@ -182,6 +182,7 @@ class Factoids(object):
 
     def __init__(self, parent):
         self.parent = parent
+        self.charset = self.parent.madcow.charset
 
     # DBM functions
     def get_dbm(self, dbname):
@@ -191,28 +192,38 @@ class Factoids(object):
 
     def get(self, dbname, key):
         dbm = self.get_dbm(dbname)
-        val = dbm.get(key.lower())
-        dbm.close()
-        return val
+        try:
+            key = key.lower().encode(self.charset, 'replace')
+            val = dbm.get(key)
+            if isinstance(val, str):
+                val = val.decode(self.charset, 'replace')
+            return val
+        finally:
+            dbm.close()
 
     def set(self, dbname, key, val):
         dbm = self.get_dbm(dbname)
-        dbm[key.lower()] = val
-        dbm.close()
+        try:
+            key = key.lower().encode(self.charset, 'replace')
+            val = val.encode(self.charset, 'replace')
+            dbm[key] = val
+        finally:
+            dbm.close()
 
     def unset(self, dbname, key):
         dbm = self.get_dbm(dbname)
-        forgot = False
         try:
-            del dbm[key.lower()]
-            forgot = True
+            key = key.lower().encode(self.charset, 'replace')
+            if key in dbm:
+                del dbm[key]
+                return True
+            return False
         finally:
             dbm.close()
-        return forgot
 
     def parse(self, message, nick, req):
         for func in (self.do_replace, self.do_forget, self.do_question,
-                self.do_statement):
+                     self.do_statement):
             result = func(message, nick, req)
             if result:
                 return result
@@ -258,8 +269,8 @@ class Factoids(object):
         botnick = self.parent.madcow.botname()
 
         # callback to interpolate the dynamic regexes
-        interpolate = lambda x: x.replace(u'WHO', who).replace(u'BOTNICK',
-                botnick).replace(u'NICK', nick)
+        interpolate = lambda x: x.replace(u'WHO', who).replace(
+                u'BOTNICK', botnick).replace(u'NICK', nick)
 
         for norm, replacement, need_addressing in self._normalize_names:
             if need_addressing and not addressed:

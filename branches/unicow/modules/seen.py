@@ -37,6 +37,7 @@ class Main(Module):
     seen = re.compile(u'^\s*seen\s+(\S+)\s*$', re.I)
 
     def __init__(self, madcow):
+        self.charset = madcow.charset
         self.dbfile = os.path.join(madcow.prefix,
                 u'data/db-%s-seen' % madcow.namespace)
 
@@ -44,11 +45,11 @@ class Main(Module):
         return anydbm.open(self.dbfile, u'c', 0640)
 
     def get(self, user):
-        user = user.lower()
         db = self.dbm()
         try:
+            user = user.lower().encode(self.charset, 'replace')
             packed = db[user]
-            db.close()
+            packed = packed.decode(self.charset, 'replace')
             channel, last, message = packed.split(u'/', 2)
 
             seconds = int(time.time() - float(last))
@@ -72,12 +73,18 @@ class Main(Module):
             return message, channel, last
         except:
             return None, None, None
+        finally:
+            db.close()
 
     def set(self, nick, channel, message):
         packed = u'%s/%s/%s' % (channel, time.time(), message)
         db = self.dbm()
-        db[nick.lower()] = packed
-        db.close()
+        try:
+            nick = nick.lower().encode(self.charset, 'replace')
+            packed = packed.encode(self.charset, 'replace')
+            db[nick] = packed
+        finally:
+            db.close()
 
     def response(self, nick, args, kwargs):
         channel = kwargs[u'channel']
