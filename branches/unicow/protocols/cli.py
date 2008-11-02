@@ -24,15 +24,14 @@ import logging as log
 from include.shell import Shell
 
 class ConsoleProtocol(Madcow):
+
     _new_nick = re.compile(r'^\s*nick\s+(\S+)\s*$', re.I)
-    _cli_usage = [
-        u'quit - quit madcow',
-        u'history - show history',
-        u'nick <nick> - change your nick',
-        u'clear - clear screen'
-    ]
     _prompt = u'\x1b[1;31m>>>\x1b[0m '
     _clear = u'\x1b[H\x1b[J'
+    _cli_usage = [u'quit - quit madcow',
+                  u'history - show history',
+                  u'nick <nick> - change your nick',
+                  u'clear - clear screen']
 
     def __init__(self, config, prefix):
         self.colorlib = ColorLib(u'ansi')
@@ -47,10 +46,11 @@ class ConsoleProtocol(Madcow):
             self.check_response_queue()
             try:
                 input = self.shell.readline(self._prompt)
-                # XXX ok we got some raw byteage.. wtf do we do with it?
             except IOError:
                 # this happens when you get EINTR from SIGHUP handling
                 continue
+
+            input = input.decode(sys.stdin.encoding, 'replace')
 
             if input.lower() == u'quit':
                 break

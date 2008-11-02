@@ -130,6 +130,8 @@ class IRCProtocol(Madcow):
         if not message:
             return
 
+        # XXX nearly all of this needs to happen BEFORE encoding
+
         # IRC really doesn't like null characters
         message = message.replace('\x00', '')
         if not message:

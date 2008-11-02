@@ -70,7 +70,7 @@
 
 *** ok, we have a problem.. the various protocol handlers read from raw byte
     streams, and we have NO IDEA what the encoding should be.  do we assume
-    something, autodetect, what?
+    something, autodetect, what?!
 
 
 unicode error:
