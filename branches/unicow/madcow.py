@@ -197,11 +197,10 @@ class Madcow(object):
             self.lock.acquire()
             try:
                 if isinstance(response, str):
-                    error = u'WE GOT A RAW STRING!!! %s' % repr(response)
-                    log.error(error)
-                    #self.protocol_output(error, req)
-                else:
-                    self.protocol_output(response.encode(self.charset), req)
+                    log.warn('madcow got a raw string: %s' % response)
+                    response = encoding.convert(response)
+                response = response.encode(self.charset, 'replace')
+                self.protocol_output(response, req)
             except Exception, error:
                 log.error(u'error in output: %s' % repr(response))
                 log.exception(error)

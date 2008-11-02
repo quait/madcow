@@ -159,7 +159,7 @@ class IRC:
         self.handlers = {}
         self.delayed_commands = [] # list of tuples in the format (time, function, arguments)
 
-        self.add_global_handler(u"ping", _ping_ponger, -42)
+        self.add_global_handler("ping", _ping_ponger, -42)
 
     def server(self):
         """Creates and returns a ServerConnection object."""
@@ -228,7 +228,7 @@ class IRC:
         while 1:
             self.process_once(timeout)
 
-    def disconnect_all(self, message=u""):
+    def disconnect_all(self, message=""):
         """Disconnects all connections."""
         for c in self.connections:
             c.disconnect(message)
@@ -305,7 +305,7 @@ class IRC:
         if self.fn_to_add_timeout:
             self.fn_to_add_timeout(delay)
 
-    def dcc(self, dcctype=u"chat"):
+    def dcc(self, dcctype="chat"):
         """Creates and returns a DCCConnection object.
 
         Arguments:
@@ -322,8 +322,8 @@ class IRC:
     def _handle_event(self, connection, event):
         """[Internal]"""
         h = self.handlers
-        for handler in h.get(u"all_events", []) + h.get(event.eventtype(), []):
-            if handler[1](connection, event) == u"NO MORE":
+        for handler in h.get("all_events", []) + h.get(event.eventtype(), []):
+            if handler[1](connection, event) == "NO MORE":
                 return
 
     def _remove_connection(self, connection):
@@ -332,7 +332,7 @@ class IRC:
         if self.fn_to_remove_socket:
             self.fn_to_remove_socket(connection._get_socket())
 
-_rfc_1459_command_regexp = re.compile(u"^(:(?P<prefix>[^ ]+) +)?(?P<command>[^ ]+)( *(?P<argument> .+))?")
+_rfc_1459_command_regexp = re.compile("^(:(?P<prefix>[^ ]+) +)?(?P<command>[^ ]+)( *(?P<argument> .+))?")
 
 
 class Connection:
@@ -344,7 +344,7 @@ class Connection:
         self.irclibobj = irclibobj
 
     def _get_socket():
-        raise IRCError, u"Not overridden"
+        raise IRCError, "Not overridden"
 
     ##############################
     ### Convenience wrappers.
@@ -365,7 +365,7 @@ class ServerNotConnectedError(ServerConnectionError):
 
 # Huh!?  Crrrrazy EFNet doesn't follow the RFC: their ircd seems to
 # use \n as message separator!  :P
-_linesep_regexp = re.compile(u"\r?\n")
+_linesep_regexp = re.compile("\r?\n")
 
 class ServerConnection(Connection):
     """This class represents an IRC server connection.
@@ -380,7 +380,7 @@ class ServerConnection(Connection):
         self.socket = None
 
     def connect(self, server, port, nickname, password=None, username=None,
-                ircname=None, localaddress=u"", localport=0, ssl=False):
+                ircname=None, localaddress="", localport=0, ssl=False):
         """Connect/reconnect to a server.
 
         Arguments:
@@ -406,11 +406,11 @@ class ServerConnection(Connection):
         Returns the ServerConnection object.
         """
         if self.connected:
-            self.disconnect(u"Changing servers")
+            self.disconnect("Changing servers")
 
-        self.previous_buffer = u""
+        self.previous_buffer = ""
         self.handlers = {}
-        self.real_server_name = u""
+        self.real_server_name = ""
         self.real_nickname = nickname
         self.server = server
         self.port = port
@@ -428,7 +428,7 @@ class ServerConnection(Connection):
         except socket.error, x:
             self.socket.close()
             self.socket = None
-            raise ServerConnectionError, u"Couldn't connect to socket: %s" % x
+            raise ServerConnectionError, "Couldn't connect to socket: %s" % x
         if ssl:
             self.transport = socket.ssl(self.socket)
             self.sock_read = self.transport.read
@@ -455,7 +455,7 @@ class ServerConnection(Connection):
         been called, the object is unusable.
         """
 
-        self.disconnect(u"Closing object")
+        self.disconnect("Closing object")
         self.irclibobj._remove_connection(self)
 
     def _get_socket(self):
@@ -472,7 +472,7 @@ class ServerConnection(Connection):
         if self.real_server_name:
             return self.real_server_name
         else:
-            return u""
+            return ""
 
     def get_nickname(self):
         """Get the (real) nick name.
@@ -490,11 +490,11 @@ class ServerConnection(Connection):
             new_data = self.sock_read(2**14)
         except socket.error, x:
             # The server hung up.
-            self.disconnect(u"Connection reset by peer")
+            self.disconnect("Connection reset by peer")
             return
         if not new_data:
             # Read nothing: connection must be down.
-            self.disconnect(u"Connection reset by peer")
+            self.disconnect("Connection reset by peer")
             return
 
         lines = _linesep_regexp.split(self.previous_buffer + new_data)
@@ -505,7 +505,7 @@ class ServerConnection(Connection):
 
         for line in lines:
             if DEBUG:
-                print u"FROM SERVER:", line
+                print "FROM SERVER:", line
 
             if not line:
                 continue
@@ -513,22 +513,22 @@ class ServerConnection(Connection):
             prefix = None
             command = None
             arguments = None
-            self._handle_event(Event(u"all_raw_messages",
+            self._handle_event(Event("all_raw_messages",
                                      self.get_server_name(),
                                      None,
                                      [line]))
 
             m = _rfc_1459_command_regexp.match(line)
-            if m.group(u"prefix"):
-                prefix = m.group(u"prefix")
+            if m.group("prefix"):
+                prefix = m.group("prefix")
                 if not self.real_server_name:
                     self.real_server_name = prefix
 
-            if m.group(u"command"):
-                command = m.group(u"command").lower()
+            if m.group("command"):
+                command = m.group("command").lower()
 
-            if m.group(u"argument"):
-                a = m.group(u"argument").split(u" :", 1)
+            if m.group("argument"):
+                a = m.group("argument").split(" :", 1)
                 arguments = a[0].split()
                 if len(a) == 2:
                     arguments.append(a[1])
@@ -537,63 +537,63 @@ class ServerConnection(Connection):
             if command in numeric_events:
                 command = numeric_events[command]
 
-            if command == u"nick":
+            if command == "nick":
                 if nm_to_n(prefix) == self.real_nickname:
                     self.real_nickname = arguments[0]
-            elif command == u"welcome":
+            elif command == "welcome":
                 # Record the nickname in case the client changed nick
                 # in a nicknameinuse callback.
                 self.real_nickname = arguments[0]
 
-            if command in [u"privmsg", u"notice"]:
+            if command in ["privmsg", "notice"]:
                 target, message = arguments[0], arguments[1]
                 messages = _ctcp_dequote(message)
 
-                if command == u"privmsg":
+                if command == "privmsg":
                     if is_channel(target):
-                        command = u"pubmsg"
+                        command = "pubmsg"
                 else:
                     if is_channel(target):
-                        command = u"pubnotice"
+                        command = "pubnotice"
                     else:
-                        command = u"privnotice"
+                        command = "privnotice"
 
                 for m in messages:
                     if type(m) is types.TupleType:
-                        if command in [u"privmsg", u"pubmsg"]:
-                            command = u"ctcp"
+                        if command in ["privmsg", "pubmsg"]:
+                            command = "ctcp"
                         else:
-                            command = u"ctcpreply"
+                            command = "ctcpreply"
 
                         m = list(m)
                         if DEBUG:
-                            print u"command: %s, source: %s, target: %s, arguments: %s" % (
+                            print "command: %s, source: %s, target: %s, arguments: %s" % (
                                 command, prefix, target, m)
                         self._handle_event(Event(command, prefix, target, m))
-                        if command == u"ctcp" and m[0] == u"ACTION":
-                            self._handle_event(Event(u"action", prefix, target, m[1:]))
+                        if command == "ctcp" and m[0] == "ACTION":
+                            self._handle_event(Event("action", prefix, target, m[1:]))
                     else:
                         if DEBUG:
-                            print u"command: %s, source: %s, target: %s, arguments: %s" % (
+                            print "command: %s, source: %s, target: %s, arguments: %s" % (
                                 command, prefix, target, [m])
                         self._handle_event(Event(command, prefix, target, [m]))
             else:
                 target = None
 
-                if command == u"quit":
+                if command == "quit":
                     arguments = [arguments[0]]
-                elif command == u"ping":
+                elif command == "ping":
                     target = arguments[0]
                 else:
                     target = arguments[0]
                     arguments = arguments[1:]
 
-                if command == u"mode":
+                if command == "mode":
                     if not is_channel(target):
-                        command = u"umode"
+                        command = "umode"
 
                 if DEBUG:
-                    print u"command: %s, source: %s, target: %s, arguments: %s" % (
+                    print "command: %s, source: %s, target: %s, arguments: %s" % (
                         command, prefix, target, arguments)
                 self._handle_event(Event(command, prefix, target, arguments))
 
@@ -627,22 +627,22 @@ class ServerConnection(Connection):
 
     def action(self, target, action):
         """Send a CTCP ACTION command."""
-        self.ctcp(u"ACTION", target, action)
+        self.ctcp("ACTION", target, action)
 
-    def admin(self, server=u""):
+    def admin(self, server=""):
         """Send an ADMIN command."""
-        self.send_raw(u" ".join([u"ADMIN", server]).strip())
+        self.send_raw(" ".join(["ADMIN", server]).strip())
 
-    def ctcp(self, ctcptype, target, parameter=u""):
+    def ctcp(self, ctcptype, target, parameter=""):
         """Send a CTCP command."""
         ctcptype = ctcptype.upper()
-        self.privmsg(target, u"\001%s%s\001" % (ctcptype, parameter and (u" " + parameter) or u""))
+        self.privmsg(target, "\001%s%s\001" % (ctcptype, parameter and (" " + parameter) or ""))
 
     def ctcp_reply(self, target, parameter):
         """Send a CTCP REPLY command."""
-        self.notice(target, u"\001%s\001" % parameter)
+        self.notice(target, "\001%s\001" % parameter)
 
-    def disconnect(self, message=u""):
+    def disconnect(self, message=""):
         """Hang up the connection.
 
         Arguments:
@@ -661,19 +661,19 @@ class ServerConnection(Connection):
         except socket.error, x:
             pass
         self.socket = None
-        self._handle_event(Event(u"disconnect", self.server, u"", [message]))
+        self._handle_event(Event("disconnect", self.server, "", [message]))
 
     def globops(self, text):
         """Send a GLOBOPS command."""
-        self.send_raw(u"GLOBOPS :" + text)
+        self.send_raw("GLOBOPS :" + text)
 
-    def info(self, server=u""):
+    def info(self, server=""):
         """Send an INFO command."""
-        self.send_raw(u" ".join([u"INFO", server]).strip())
+        self.send_raw(" ".join(["INFO", server]).strip())
 
     def invite(self, nick, channel):
         """Send an INVITE command."""
-        self.send_raw(u" ".join([u"INVITE", nick, channel]).strip())
+        self.send_raw(" ".join(["INVITE", nick, channel]).strip())
 
     def ison(self, nicks):
         """Send an ISON command.
@@ -682,103 +682,103 @@ class ServerConnection(Connection):
 
             nicks -- List of nicks.
         """
-        self.send_raw(u"ISON " + u" ".join(nicks))
+        self.send_raw("ISON " + " ".join(nicks))
 
-    def join(self, channel, key=u""):
+    def join(self, channel, key=""):
         """Send a JOIN command."""
-        self.send_raw(u"JOIN %s%s" % (channel, (key and (u" " + key))))
+        self.send_raw("JOIN %s%s" % (channel, (key and (" " + key))))
 
-    def kick(self, channel, nick, comment=u""):
+    def kick(self, channel, nick, comment=""):
         """Send a KICK command."""
-        self.send_raw(u"KICK %s %s%s" % (channel, nick, (comment and (u" :" + comment))))
+        self.send_raw("KICK %s %s%s" % (channel, nick, (comment and (" :" + comment))))
 
-    def links(self, remote_server=u"", server_mask=u""):
+    def links(self, remote_server="", server_mask=""):
         """Send a LINKS command."""
-        command = u"LINKS"
+        command = "LINKS"
         if remote_server:
-            command = command + u" " + remote_server
+            command = command + " " + remote_server
         if server_mask:
-            command = command + u" " + server_mask
+            command = command + " " + server_mask
         self.send_raw(command)
 
-    def list(self, channels=None, server=u""):
+    def list(self, channels=None, server=""):
         """Send a LIST command."""
-        command = u"LIST"
+        command = "LIST"
         if channels:
-            command = command + u" " + u",".join(channels)
+            command = command + " " + ",".join(channels)
         if server:
-            command = command + u" " + server
+            command = command + " " + server
         self.send_raw(command)
 
-    def lusers(self, server=u""):
+    def lusers(self, server=""):
         """Send a LUSERS command."""
-        self.send_raw(u"LUSERS" + (server and (u" " + server)))
+        self.send_raw("LUSERS" + (server and (" " + server)))
 
     def mode(self, target, command):
         """Send a MODE command."""
-        self.send_raw(u"MODE %s %s" % (target, command))
+        self.send_raw("MODE %s %s" % (target, command))
 
-    def motd(self, server=u""):
+    def motd(self, server=""):
         """Send an MOTD command."""
-        self.send_raw(u"MOTD" + (server and (u" " + server)))
+        self.send_raw("MOTD" + (server and (" " + server)))
 
     def names(self, channels=None):
         """Send a NAMES command."""
-        self.send_raw(u"NAMES" + (channels and (u" " + u",".join(channels)) or u""))
+        self.send_raw("NAMES" + (channels and (" " + ",".join(channels)) or ""))
 
     def nick(self, newnick):
         """Send a NICK command."""
-        self.send_raw(u"NICK " + newnick)
+        self.send_raw("NICK " + newnick)
 
     def notice(self, target, text):
         """Send a NOTICE command."""
         # Should limit len(text) here!
-        self.send_raw(u"NOTICE %s :%s" % (target, text))
+        self.send_raw("NOTICE %s :%s" % (target, text))
 
     def oper(self, nick, password):
         """Send an OPER command."""
-        self.send_raw(u"OPER %s %s" % (nick, password))
+        self.send_raw("OPER %s %s" % (nick, password))
 
-    def part(self, channels, message=u""):
+    def part(self, channels, message=""):
         """Send a PART command."""
         if type(channels) == types.StringType:
-            self.send_raw(u"PART " + channels + (message and (u" " + message)))
+            self.send_raw("PART " + channels + (message and (" " + message)))
         else:
-            self.send_raw(u"PART " + u",".join(channels) + (message and (u" " + message)))
+            self.send_raw("PART " + ",".join(channels) + (message and (" " + message)))
 
     def pass_(self, password):
         """Send a PASS command."""
-        self.send_raw(u"PASS " + password)
+        self.send_raw("PASS " + password)
 
-    def ping(self, target, target2=u""):
+    def ping(self, target, target2=""):
         """Send a PING command."""
-        self.send_raw(u"PING %s%s" % (target, target2 and (u" " + target2)))
+        self.send_raw("PING %s%s" % (target, target2 and (" " + target2)))
 
-    def pong(self, target, target2=u""):
+    def pong(self, target, target2=""):
         """Send a PONG command."""
-        self.send_raw(u"PONG %s%s" % (target, target2 and (u" " + target2)))
+        self.send_raw("PONG %s%s" % (target, target2 and (" " + target2)))
 
     def privmsg(self, target, text):
         """Send a PRIVMSG command."""
         # Should limit len(text) here!
-        self.send_raw(u"PRIVMSG %s :%s" % (target, text))
+        self.send_raw("PRIVMSG %s :%s" % (target, text))
 
     def privmsg_many(self, targets, text):
         """Send a PRIVMSG command to multiple targets."""
         # Should limit len(text) here!
-        self.send_raw(u"PRIVMSG %s :%s" % (u",".join(targets), text))
+        self.send_raw("PRIVMSG %s :%s" % (",".join(targets), text))
 
-    def quit(self, message=u""):
+    def quit(self, message=""):
         """Send a QUIT command."""
         # Note that many IRC servers don't use your QUIT message
         # unless you've been connected for at least 5 minutes!
-        self.send_raw(u"QUIT" + (message and (u" :" + message)))
+        self.send_raw("QUIT" + (message and (" :" + message)))
 
-    def sconnect(self, target, port=u"", server=u""):
+    def sconnect(self, target, port="", server=""):
         """Send an SCONNECT command."""
-        self.send_raw(u"CONNECT %s%s%s" % (target,
-                                          port and (u" " + port),
-                                          server and (u" " + server)))
+        self.send_raw("CONNECT %s%s%s" % (target,
+                                          port and (" " + port),
+                                          server and (" " + server)))
 
     def send_raw(self, string):
         """Send raw string to the server.
@@ -786,71 +786,71 @@ class ServerConnection(Connection):
         The string will be padded with appropriate CR LF.
         """
         if self.socket is None:
-            raise ServerNotConnectedError, u"Not connected."
+            raise ServerNotConnectedError, "Not connected."
         try:
-            self.sock_write(string + u"\r\n")
+            self.sock_write(string + "\r\n")
             if DEBUG:
-                print u"TO SERVER:", string
+                print "TO SERVER:", string
         except socket.error, x:
             # Ouch!
-            self.disconnect(u"Connection reset by peer.")
+            self.disconnect("Connection reset by peer.")
 
-    def squit(self, server, comment=u""):
+    def squit(self, server, comment=""):
         """Send an SQUIT command."""
-        self.send_raw(u"SQUIT %s%s" % (server, comment and (u" :" + comment)))
+        self.send_raw("SQUIT %s%s" % (server, comment and (" :" + comment)))
 
-    def stats(self, statstype, server=u""):
+    def stats(self, statstype, server=""):
         """Send a STATS command."""
-        self.send_raw(u"STATS %s%s" % (statstype, server and (u" " + server)))
+        self.send_raw("STATS %s%s" % (statstype, server and (" " + server)))
 
-    def time(self, server=u""):
+    def time(self, server=""):
         """Send a TIME command."""
-        self.send_raw(u"TIME" + (server and (u" " + server)))
+        self.send_raw("TIME" + (server and (" " + server)))
 
     def topic(self, channel, new_topic=None):
         """Send a TOPIC command."""
         if new_topic is None:
-            self.send_raw(u"TOPIC " + channel)
+            self.send_raw("TOPIC " + channel)
         else:
-            self.send_raw(u"TOPIC %s :%s" % (channel, new_topic))
+            self.send_raw("TOPIC %s :%s" % (channel, new_topic))
 
-    def trace(self, target=u""):
+    def trace(self, target=""):
         """Send a TRACE command."""
-        self.send_raw(u"TRACE" + (target and (u" " + target)))
+        self.send_raw("TRACE" + (target and (" " + target)))
 
     def user(self, username, realname):
         """Send a USER command."""
-        self.send_raw(u"USER %s 0 * :%s" % (username, realname))
+        self.send_raw("USER %s 0 * :%s" % (username, realname))
 
     def userhost(self, nicks):
         """Send a USERHOST command."""
-        self.send_raw(u"USERHOST " + u",".join(nicks))
+        self.send_raw("USERHOST " + ",".join(nicks))
 
-    def users(self, server=u""):
+    def users(self, server=""):
         """Send a USERS command."""
-        self.send_raw(u"USERS" + (server and (u" " + server)))
+        self.send_raw("USERS" + (server and (" " + server)))
 
-    def version(self, server=u""):
+    def version(self, server=""):
         """Send a VERSION command."""
-        self.send_raw(u"VERSION" + (server and (u" " + server)))
+        self.send_raw("VERSION" + (server and (" " + server)))
 
     def wallops(self, text):
         """Send a WALLOPS command."""
-        self.send_raw(u"WALLOPS :" + text)
+        self.send_raw("WALLOPS :" + text)
 
-    def who(self, target=u"", op=u""):
+    def who(self, target="", op=""):
         """Send a WHO command."""
-        self.send_raw(u"WHO%s%s" % (target and (u" " + target), op and (u" o")))
+        self.send_raw("WHO%s%s" % (target and (" " + target), op and (" o")))
 
     def whois(self, targets):
         """Send a WHOIS command."""
-        self.send_raw(u"WHOIS " + u",".join(targets))
+        self.send_raw("WHOIS " + ",".join(targets))
 
-    def whowas(self, nick, max=u"", server=u""):
+    def whowas(self, nick, max="", server=""):
         """Send a WHOWAS command."""
-        self.send_raw(u"WHOWAS %s%s%s" % (nick,
-                                         max and (u" " + max),
-                                         server and (u" " + server)))
+        self.send_raw("WHOWAS %s%s%s" % (nick,
+                                         max and (" " + max),
+                                         server and (" " + server)))
 
 
 class DCCConnectionError(IRCError):
@@ -884,14 +884,14 @@ class DCCConnection(Connection):
         self.peeraddress = socket.gethostbyname(address)
         self.peerport = port
         self.socket = None
-        self.previous_buffer = u""
+        self.previous_buffer = ""
         self.handlers = {}
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.passive = 0
         try:
             self.socket.connect((self.peeraddress, self.peerport))
         except socket.error, x:
-            raise DCCConnectionError, u"Couldn't connect to socket: %s" % x
+            raise DCCConnectionError, "Couldn't connect to socket: %s" % x
         self.connected = 1
         if self.irclibobj.fn_to_add_socket:
             self.irclibobj.fn_to_add_socket(self.socket)
@@ -907,7 +907,7 @@ class DCCConnection(Connection):
         peer, the peer address and port are available as
         self.peeraddress and self.peerport.
         """
-        self.previous_buffer = u""
+        self.previous_buffer = ""
         self.handlers = {}
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.passive = 1
@@ -916,10 +916,10 @@ class DCCConnection(Connection):
             self.localaddress, self.localport = self.socket.getsockname()
             self.socket.listen(10)
         except socket.error, x:
-            raise DCCConnectionError, u"Couldn't bind socket: %s" % x
+            raise DCCConnectionError, "Couldn't bind socket: %s" % x
         return self
 
-    def disconnect(self, message=u""):
+    def disconnect(self, message=""):
         """Hang up the connection and close the object.
 
         Arguments:
@@ -937,7 +937,7 @@ class DCCConnection(Connection):
         self.socket = None
         self.irclibobj._handle_event(
             self,
-            Event(u"dcc_disconnect", self.peeraddress, u"", [message]))
+            Event("dcc_disconnect", self.peeraddress, "", [message]))
         self.irclibobj._remove_connection(self)
 
     def process_data(self):
@@ -949,25 +949,25 @@ class DCCConnection(Connection):
             self.socket = conn
             self.connected = 1
             if DEBUG:
-                print u"DCC connection from %s:%d" % (
+                print "DCC connection from %s:%d" % (
                     self.peeraddress, self.peerport)
             self.irclibobj._handle_event(
                 self,
-                Event(u"dcc_connect", self.peeraddress, None, None))
+                Event("dcc_connect", self.peeraddress, None, None))
             return
 
         try:
             new_data = self.sock_read(2**14)
         except socket.error, x:
             # The server hung up.
-            self.disconnect(u"Connection reset by peer")
+            self.disconnect("Connection reset by peer")
             return
         if not new_data:
             # Read nothing: connection must be down.
-            self.disconnect(u"Connection reset by peer")
+            self.disconnect("Connection reset by peer")
             return
 
-        if self.dcctype == u"chat":
+        if self.dcctype == "chat":
             # The specification says lines are terminated with LF, but
             # it seems safer to handle CR LF terminations too.
             chunks = _linesep_regexp.split(self.previous_buffer + new_data)
@@ -982,15 +982,15 @@ class DCCConnection(Connection):
         else:
             chunks = [new_data]
 
-        command = u"dccmsg"
+        command = "dccmsg"
         prefix = self.peeraddress
         target = None
         for chunk in chunks:
             if DEBUG:
-                print u"FROM PEER:", chunk
+                print "FROM PEER:", chunk
             arguments = [chunk]
             if DEBUG:
-                print u"command: %s, source: %s, target: %s, arguments: %s" % (
+                print "command: %s, source: %s, target: %s, arguments: %s" % (
                     command, prefix, target, arguments)
             self.irclibobj._handle_event(
                 self,
@@ -1008,13 +1008,13 @@ class DCCConnection(Connection):
         """
         try:
             self.sock_write(string)
-            if self.dcctype == u"chat":
-                self.sock_write(u"\n")
+            if self.dcctype == "chat":
+                self.sock_write("\n")
             if DEBUG:
-                print u"TO PEER: %s\n" % string
+                print "TO PEER: %s\n" % string
         except socket.error, x:
             # Ouch!
-            self.disconnect(u"Connection reset by peer.")
+            self.disconnect("Connection reset by peer.")
 
 class SimpleIRCClient:
     """A simple single-server IRC client class.
@@ -1041,12 +1041,12 @@ class SimpleIRCClient:
         self.ircobj = IRC()
         self.connection = self.ircobj.server()
         self.dcc_connections = []
-        self.ircobj.add_global_handler(u"all_events", self._dispatcher, -10)
-        self.ircobj.add_global_handler(u"dcc_disconnect", self._dcc_disconnect, -10)
+        self.ircobj.add_global_handler("all_events", self._dispatcher, -10)
+        self.ircobj.add_global_handler("dcc_disconnect", self._dcc_disconnect, -10)
 
     def _dispatcher(self, c, e):
         """[Internal]"""
-        m = u"on_" + e.eventtype()
+        m = "on_" + e.eventtype()
         if hasattr(self, m):
             getattr(self, m)(c, e)
 
@@ -1054,7 +1054,7 @@ class SimpleIRCClient:
         self.dcc_connections.remove(c)
 
     def connect(self, server, port, nickname, password=None, username=None,
-                ircname=None, localaddress=u"", localport=0):
+                ircname=None, localaddress="", localport=0):
         """Connect/reconnect to a server.
 
         Arguments:
@@ -1081,7 +1081,7 @@ class SimpleIRCClient:
                                 password, username, ircname,
                                 localaddress, localport)
 
-    def dcc_connect(self, address, port, dcctype=u"chat"):
+    def dcc_connect(self, address, port, dcctype="chat"):
         """Connect to a DCC peer.
 
         Arguments:
@@ -1097,7 +1097,7 @@ class SimpleIRCClient:
         dcc.connect(address, port)
         return dcc
 
-    def dcc_listen(self, dcctype=u"chat"):
+    def dcc_listen(self, dcctype="chat"):
         """Listen for connections from a DCC peer.
 
         Returns a DCCConnection instance.
@@ -1151,18 +1151,18 @@ class Event:
         """Get the event arguments."""
         return self._arguments
 
-_LOW_LEVEL_QUOTE = u"\020"
-_CTCP_LEVEL_QUOTE = u"\134"
-_CTCP_DELIMITER = u"\001"
+_LOW_LEVEL_QUOTE = "\020"
+_CTCP_LEVEL_QUOTE = "\134"
+_CTCP_DELIMITER = "\001"
 
 _low_level_mapping = {
-    u"0": u"\000",
-    u"n": u"\n",
-    u"r": u"\r",
+    "0": "\000",
+    "n": "\n",
+    "r": "\r",
     _LOW_LEVEL_QUOTE: _LOW_LEVEL_QUOTE
 }
 
-_low_level_regexp = re.compile(_LOW_LEVEL_QUOTE + u"(.)")
+_low_level_regexp = re.compile(_LOW_LEVEL_QUOTE + "(.)")
 
 def mask_matches(nick, mask):
     """Check if a nick matches a mask.
@@ -1171,18 +1171,18 @@ def mask_matches(nick, mask):
     """
     nick = irc_lower(nick)
     mask = irc_lower(mask)
-    mask = mask.replace(u"\\", "\\\\")
-    for ch in u".$|[](){}+":
+    mask = mask.replace("\\", "\\\\")
+    for ch in ".$|[](){}+":
         mask = mask.replace(ch, "\\" + ch)
-    mask = mask.replace(u"?", u".")
-    mask = mask.replace(u"*", u".*")
+    mask = mask.replace("?", ".")
+    mask = mask.replace("*", ".*")
     r = re.compile(mask, re.IGNORECASE)
     return r.match(nick)
 
-_special = u"-[]\\`^{}"
+_special = "-[]\\`^{}"
 nick_characters = string.ascii_letters + string.digits + _special
-_ircstring_translation = string.maketrans(string.ascii_uppercase + u"[]\\^",
-                                          string.ascii_lowercase + u"{}|~")
+_ircstring_translation = string.maketrans(string.ascii_uppercase + "[]\\^",
+                                          string.ascii_lowercase + "{}|~")
 
 def irc_lower(s):
     """Returns a lowercased string.
@@ -1233,7 +1233,7 @@ def _ctcp_dequote(message):
 
             if i < len(chunks)-2:
                 # Aye!  CTCP tagged data ahead!
-                messages.append(tuple(chunks[i+1].split(u" ", 1)))
+                messages.append(tuple(chunks[i+1].split(" ", 1)))
 
             i = i + 2
 
@@ -1251,7 +1251,7 @@ def is_channel(string):
 
     Returns true if the argument is a channel name, otherwise false.
     """
-    return string and string[0] in u"#&+!"
+    return string and string[0] in "#&+!"
 
 def ip_numstr_to_quad(num):
     """Convert an IP number as an integer given in ASCII
@@ -1260,15 +1260,15 @@ def ip_numstr_to_quad(num):
     n = long(num)
     p = map(str, map(int, [n >> 24 & 0xFF, n >> 16 & 0xFF,
                            n >> 8 & 0xFF, n & 0xFF]))
-    return u".".join(p)
+    return ".".join(p)
 
-def ip_quad_to_numunicode(quad):
+def ip_quad_to_numstr(quad):
     """Convert an IP address string (e.g. '192.168.0.1') to an IP
     number as an integer given in ASCII representation
     (e.g. '3232235521')."""
-    p = map(long, quad.split(u"."))
-    s = unicode((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3])
-    if s[-1] == u"L":
+    p = map(long, quad.split("."))
+    s = str((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3])
+    if s[-1] == "L":
         s = s[:-1]
     return s
 
@@ -1277,29 +1277,29 @@ def nm_to_n(s):
 
     (The source of an Event is a nickmask.)
     """
-    return s.split(u"!")[0]
+    return s.split("!")[0]
 
 def nm_to_uh(s):
     """Get the userhost part of a nickmask.
 
     (The source of an Event is a nickmask.)
     """
-    return s.split(u"!")[1]
+    return s.split("!")[1]
 
 def nm_to_h(s):
     """Get the host part of a nickmask.
 
     (The source of an Event is a nickmask.)
     """
-    return s.split(u"@")[1]
+    return s.split("@")[1]
 
 def nm_to_u(s):
     """Get the user part of a nickmask.
 
     (The source of an Event is a nickmask.)
     """
-    s = s.split(u"!")[1]
-    return s.split(u"@")[0]
+    s = s.split("!")[1]
+    return s.split("@")[0]
 
 def parse_nick_modes(mode_string):
     """Parse a nick mode string.
@@ -1314,7 +1314,7 @@ def parse_nick_modes(mode_string):
     [['+', 'a', None], ['+', 'b', None], ['-', 'c', None]]
     """
 
-    return _parse_modes(mode_string, u"")
+    return _parse_modes(mode_string, "")
 
 def parse_channel_modes(mode_string):
     """Parse a channel mode string.
@@ -1329,15 +1329,15 @@ def parse_channel_modes(mode_string):
     [['+', 'a', None], ['+', 'b', 'foo'], ['-', 'c', None]]
     """
 
-    return _parse_modes(mode_string, u"bklvo")
+    return _parse_modes(mode_string, "bklvo")
 
-def _parse_modes(mode_string, unary_modes=u""):
+def _parse_modes(mode_string, unary_modes=""):
     """[Internal]"""
     modes = []
     arg_count = 0
 
     # State variable.
-    sign = u""
+    sign = ""
 
     a = mode_string.split()
     if len(a) == 0:
@@ -1345,12 +1345,12 @@ def _parse_modes(mode_string, unary_modes=u""):
     else:
         mode_part, args = a[0], a[1:]
 
-    if mode_part[0] not in u"+-":
+    if mode_part[0] not in "+-":
         return []
     for ch in mode_part:
-        if ch in u"+-":
+        if ch in "+-":
             sign = ch
-        elif ch == u" ":
+        elif ch == " ":
             collecting_arguments = 1
         elif ch in unary_modes:
             if len(args) >= arg_count + 1:
@@ -1368,191 +1368,191 @@ def _ping_ponger(connection, event):
 
 # Numeric table mostly stolen from the Perl IRC module (Net::IRC).
 numeric_events = {
-    u"001": u"welcome",
-    u"002": u"yourhost",
-    u"003": u"created",
-    u"004": u"myinfo",
-    u"005": u"featurelist",  # XXX
-    u"200": u"tracelink",
-    u"201": u"traceconnecting",
-    u"202": u"tracehandshake",
-    u"203": u"traceunknown",
-    u"204": u"traceoperator",
-    u"205": u"traceuser",
-    u"206": u"traceserver",
-    u"207": u"traceservice",
-    u"208": u"tracenewtype",
-    u"209": u"traceclass",
-    u"210": u"tracereconnect",
-    u"211": u"statslinkinfo",
-    u"212": u"statscommands",
-    u"213": u"statscline",
-    u"214": u"statsnline",
-    u"215": u"statsiline",
-    u"216": u"statskline",
-    u"217": u"statsqline",
-    u"218": u"statsyline",
-    u"219": u"endofstats",
-    u"221": u"umodeis",
-    u"231": u"serviceinfo",
-    u"232": u"endofservices",
-    u"233": u"service",
-    u"234": u"servlist",
-    u"235": u"servlistend",
-    u"241": u"statslline",
-    u"242": u"statsuptime",
-    u"243": u"statsoline",
-    u"244": u"statshline",
-    u"250": u"luserconns",
-    u"251": u"luserclient",
-    u"252": u"luserop",
-    u"253": u"luserunknown",
-    u"254": u"luserchannels",
-    u"255": u"luserme",
-    u"256": u"adminme",
-    u"257": u"adminloc1",
-    u"258": u"adminloc2",
-    u"259": u"adminemail",
-    u"261": u"tracelog",
-    u"262": u"endoftrace",
-    u"263": u"tryagain",
-    u"265": u"n_local",
-    u"266": u"n_global",
-    u"300": u"none",
-    u"301": u"away",
-    u"302": u"userhost",
-    u"303": u"ison",
-    u"305": u"unaway",
-    u"306": u"nowaway",
-    u"311": u"whoisuser",
-    u"312": u"whoisserver",
-    u"313": u"whoisoperator",
-    u"314": u"whowasuser",
-    u"315": u"endofwho",
-    u"316": u"whoischanop",
-    u"317": u"whoisidle",
-    u"318": u"endofwhois",
-    u"319": u"whoischannels",
-    u"321": u"liststart",
-    u"322": u"list",
-    u"323": u"listend",
-    u"324": u"channelmodeis",
-    u"329": u"channelcreate",
-    u"331": u"notopic",
-    u"332": u"currenttopic",
-    u"333": u"topicinfo",
-    u"341": u"inviting",
-    u"342": u"summoning",
-    u"346": u"invitelist",
-    u"347": u"endofinvitelist",
-    u"348": u"exceptlist",
-    u"349": u"endofexceptlist",
-    u"351": u"version",
-    u"352": u"whoreply",
-    u"353": u"namreply",
-    u"361": u"killdone",
-    u"362": u"closing",
-    u"363": u"closeend",
-    u"364": u"links",
-    u"365": u"endoflinks",
-    u"366": u"endofnames",
-    u"367": u"banlist",
-    u"368": u"endofbanlist",
-    u"369": u"endofwhowas",
-    u"371": u"info",
-    u"372": u"motd",
-    u"373": u"infostart",
-    u"374": u"endofinfo",
-    u"375": u"motdstart",
-    u"376": u"endofmotd",
-    u"377": u"motd2",        # 1997-10-16 -- tkil
-    u"381": u"youreoper",
-    u"382": u"rehashing",
-    u"384": u"myportis",
-    u"391": u"time",
-    u"392": u"usersstart",
-    u"393": u"users",
-    u"394": u"endofusers",
-    u"395": u"nousers",
-    u"401": u"nosuchnick",
-    u"402": u"nosuchserver",
-    u"403": u"nosuchchannel",
-    u"404": u"cannotsendtochan",
-    u"405": u"toomanychannels",
-    u"406": u"wasnosuchnick",
-    u"407": u"toomanytargets",
-    u"409": u"noorigin",
-    u"411": u"norecipient",
-    u"412": u"notexttosend",
-    u"413": u"notoplevel",
-    u"414": u"wildtoplevel",
-    u"421": u"unknowncommand",
-    u"422": u"nomotd",
-    u"423": u"noadmininfo",
-    u"424": u"fileerror",
-    u"431": u"nonicknamegiven",
-    u"432": u"erroneusnickname", # Thiss iz how its speld in thee RFC.
-    u"433": u"nicknameinuse",
-    u"436": u"nickcollision",
-    u"437": u"unavailresource",  # u"Nick temporally unavailable"
-    u"441": u"usernotinchannel",
-    u"442": u"notonchannel",
-    u"443": u"useronchannel",
-    u"444": u"nologin",
-    u"445": u"summondisabled",
-    u"446": u"usersdisabled",
-    u"451": u"notregistered",
-    u"461": u"needmoreparams",
-    u"462": u"alreadyregistered",
-    u"463": u"nopermforhost",
-    u"464": u"passwdmismatch",
-    u"465": u"yourebannedcreep", # I love this one...
-    u"466": u"youwillbebanned",
-    u"467": u"keyset",
-    u"471": u"channelisfull",
-    u"472": u"unknownmode",
-    u"473": u"inviteonlychan",
-    u"474": u"bannedfromchan",
-    u"475": u"badchannelkey",
-    u"476": u"badchanmask",
-    u"477": u"nochanmodes",  # u"Channel doesn't support modes"
-    u"478": u"banlistfull",
-    u"481": u"noprivileges",
-    u"482": u"chanoprivsneeded",
-    u"483": u"cantkillserver",
-    u"484": u"restricted",   # Connection is restricted
-    u"485": u"uniqopprivsneeded",
-    u"491": u"nooperhost",
-    u"492": u"noservicehost",
-    u"501": u"umodeunknownflag",
-    u"502": u"usersdontmatch",
+    "001": "welcome",
+    "002": "yourhost",
+    "003": "created",
+    "004": "myinfo",
+    "005": "featurelist",  # XXX
+    "200": "tracelink",
+    "201": "traceconnecting",
+    "202": "tracehandshake",
+    "203": "traceunknown",
+    "204": "traceoperator",
+    "205": "traceuser",
+    "206": "traceserver",
+    "207": "traceservice",
+    "208": "tracenewtype",
+    "209": "traceclass",
+    "210": "tracereconnect",
+    "211": "statslinkinfo",
+    "212": "statscommands",
+    "213": "statscline",
+    "214": "statsnline",
+    "215": "statsiline",
+    "216": "statskline",
+    "217": "statsqline",
+    "218": "statsyline",
+    "219": "endofstats",
+    "221": "umodeis",
+    "231": "serviceinfo",
+    "232": "endofservices",
+    "233": "service",
+    "234": "servlist",
+    "235": "servlistend",
+    "241": "statslline",
+    "242": "statsuptime",
+    "243": "statsoline",
+    "244": "statshline",
+    "250": "luserconns",
+    "251": "luserclient",
+    "252": "luserop",
+    "253": "luserunknown",
+    "254": "luserchannels",
+    "255": "luserme",
+    "256": "adminme",
+    "257": "adminloc1",
+    "258": "adminloc2",
+    "259": "adminemail",
+    "261": "tracelog",
+    "262": "endoftrace",
+    "263": "tryagain",
+    "265": "n_local",
+    "266": "n_global",
+    "300": "none",
+    "301": "away",
+    "302": "userhost",
+    "303": "ison",
+    "305": "unaway",
+    "306": "nowaway",
+    "311": "whoisuser",
+    "312": "whoisserver",
+    "313": "whoisoperator",
+    "314": "whowasuser",
+    "315": "endofwho",
+    "316": "whoischanop",
+    "317": "whoisidle",
+    "318": "endofwhois",
+    "319": "whoischannels",
+    "321": "liststart",
+    "322": "list",
+    "323": "listend",
+    "324": "channelmodeis",
+    "329": "channelcreate",
+    "331": "notopic",
+    "332": "currenttopic",
+    "333": "topicinfo",
+    "341": "inviting",
+    "342": "summoning",
+    "346": "invitelist",
+    "347": "endofinvitelist",
+    "348": "exceptlist",
+    "349": "endofexceptlist",
+    "351": "version",
+    "352": "whoreply",
+    "353": "namreply",
+    "361": "killdone",
+    "362": "closing",
+    "363": "closeend",
+    "364": "links",
+    "365": "endoflinks",
+    "366": "endofnames",
+    "367": "banlist",
+    "368": "endofbanlist",
+    "369": "endofwhowas",
+    "371": "info",
+    "372": "motd",
+    "373": "infostart",
+    "374": "endofinfo",
+    "375": "motdstart",
+    "376": "endofmotd",
+    "377": "motd2",        # 1997-10-16 -- tkil
+    "381": "youreoper",
+    "382": "rehashing",
+    "384": "myportis",
+    "391": "time",
+    "392": "usersstart",
+    "393": "users",
+    "394": "endofusers",
+    "395": "nousers",
+    "401": "nosuchnick",
+    "402": "nosuchserver",
+    "403": "nosuchchannel",
+    "404": "cannotsendtochan",
+    "405": "toomanychannels",
+    "406": "wasnosuchnick",
+    "407": "toomanytargets",
+    "409": "noorigin",
+    "411": "norecipient",
+    "412": "notexttosend",
+    "413": "notoplevel",
+    "414": "wildtoplevel",
+    "421": "unknowncommand",
+    "422": "nomotd",
+    "423": "noadmininfo",
+    "424": "fileerror",
+    "431": "nonicknamegiven",
+    "432": "erroneusnickname", # Thiss iz how its speld in thee RFC.
+    "433": "nicknameinuse",
+    "436": "nickcollision",
+    "437": "unavailresource",  # "Nick temporally unavailable"
+    "441": "usernotinchannel",
+    "442": "notonchannel",
+    "443": "useronchannel",
+    "444": "nologin",
+    "445": "summondisabled",
+    "446": "usersdisabled",
+    "451": "notregistered",
+    "461": "needmoreparams",
+    "462": "alreadyregistered",
+    "463": "nopermforhost",
+    "464": "passwdmismatch",
+    "465": "yourebannedcreep", # I love this one...
+    "466": "youwillbebanned",
+    "467": "keyset",
+    "471": "channelisfull",
+    "472": "unknownmode",
+    "473": "inviteonlychan",
+    "474": "bannedfromchan",
+    "475": "badchannelkey",
+    "476": "badchanmask",
+    "477": "nochanmodes",  # "Channel doesn't support modes"
+    "478": "banlistfull",
+    "481": "noprivileges",
+    "482": "chanoprivsneeded",
+    "483": "cantkillserver",
+    "484": "restricted",   # Connection is restricted
+    "485": "uniqopprivsneeded",
+    "491": "nooperhost",
+    "492": "noservicehost",
+    "501": "umodeunknownflag",
+    "502": "usersdontmatch",
 }
 
 generated_events = [
     # Generated events
-    u"dcc_connect",
-    u"dcc_disconnect",
-    u"dccmsg",
-    u"disconnect",
-    u"ctcp",
-    u"ctcpreply",
+    "dcc_connect",
+    "dcc_disconnect",
+    "dccmsg",
+    "disconnect",
+    "ctcp",
+    "ctcpreply",
 ]
 
 protocol_events = [
     # IRC protocol events
-    u"error",
-    u"join",
-    u"kick",
-    u"mode",
-    u"part",
-    u"ping",
-    u"privmsg",
-    u"privnotice",
-    u"pubmsg",
-    u"pubnotice",
-    u"quit",
-    u"invite",
-    u"pong",
+    "error",
+    "join",
+    "kick",
+    "mode",
+    "part",
+    "ping",
+    "privmsg",
+    "privnotice",
+    "pubmsg",
+    "pubnotice",
+    "quit",
+    "invite",
+    "pong",
 ]
 
 all_events = generated_events + protocol_events + numeric_events.values()

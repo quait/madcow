@@ -127,20 +127,21 @@ class IRCProtocol(Madcow):
 
     def protocol_output(self, message, req=None):
         """output to IRC"""
-        if message is None:
+        if not message:
             return
 
         # IRC really doesn't like null characters
-        message = message.replace(u'\x00', u'')
-        if not len(message):
+        message = message.replace('\x00', '')
+        if not message:
             return
 
-        # color output if requested
+        # color output if requested # XXX this needs to happen before encoding
         if req.colorize:
             style = random.choice(self.colorlib._rainbow_map.keys())
             message = self.colorlib.rainbow(message, style=style)
 
         # MUST wrap if unset because irc will boot you for exceeding maxlen
+        # XXX this needs to happen before encoding too!
         wrap = self.config.irc.wrapsize
         if wrap is None or wrap > 400:
             wrap = 400

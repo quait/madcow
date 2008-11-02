@@ -20,70 +20,72 @@
 """Some helper functions"""
 
 import re
-import urllib, urllib2, cookielib
 import sys
 from time import time as unix_time
 import os
-from types import StringTypes
 
 __author__ = u'cj_ <cjones@gruntle.org>'
-__all__ = [u'Debug', u'Module', u'Error', u'cache', u'throttle', u'stripHTML',
-           u'isUTF8', u'unescape_entities', u'slurp', u'Request',
-           u'cache_property']
+__all__ = [u'Debug', u'Module', u'cache', u'throttle', u'stripHTML',
+           u'unescape_entities', u'slurp', u'Request', u'cache_property']
 
-re_sup = re.compile(u'<sup>(.*?)</sup>', re.I)
-re_br = re.compile(u'<br[^>]+>', re.I)
-re_tags = re.compile(u'<[^>]+>')
-re_newlines = re.compile(u'[\r\n]+')
-re_highascii = re.compile(u'([\x80-\xff])')
+# pre-compile regex
+suptag_re = re.compile(u'<sup>(.*?)</sup>', re.I)
+break_re = re.compile(u'<br[^>]+>', re.I)
+tags_re = re.compile(u'<[^>]+>')
+newlines_re = re.compile(u'[\r\n]+')
+highascii_re = re.compile(u'([\x80-\xff])')
+entity_re = re.compile(r'(&([^;]+);)')
+charentity_re = re.compile(r'^&#(x)?(\d+);$', re.I)
 
-entityNames = {
-    u'quot': 34, u'amp': 38, u'apos': 39, u'lt': 60, u'gt': 62, u'nbsp': 32,
-    u'iexcl': 161, u'cent': 162, u'pound': 163, u'curren': 164, u'yen': 165,
-    u'brvbar': 166, u'sect': 167, u'uml': 168, u'copy': 169, u'ordf': 170,
-    u'laquo': 171, u'not': 172, u'shy': 173, u'reg': 174, u'macr': 175, u'deg': 176,
-    u'plusmn': 177, u'sup2': 178, u'sup3': 179, u'acute': 180, u'micro': 181,
-    u'para': 182, u'middot': 183, u'cedil': 184, u'sup1': 185, u'ordm': 186,
-    u'raquo': 187, u'frac14': 188, u'frac12': 189, u'frac34': 190, u'iquest': 191,
-    u'Agrave': 192, u'Aacute': 193, u'Acirc': 194, u'Atilde': 195, u'Auml': 196,
-    u'Aring': 197, u'AElig': 198, u'Ccedil': 199, u'Egrave': 200, u'Eacute': 201,
-    u'Ecirc': 202, u'Euml': 203, u'Igrave': 204, u'Iacute': 205, u'Icirc': 206,
-    u'Iuml': 207, u'ETH': 208, u'Ntilde': 209, u'Ograve': 210, u'Oacute': 211,
-    u'Ocirc': 212, u'Otilde': 213, u'Ouml': 214, u'times': 215, u'Oslash': 216,
-    u'Ugrave': 217, u'Uacute': 218, u'Ucirc': 219, u'Uuml': 220, u'Yacute': 221,
-    u'THORN': 222, u'szlig': 223, u'agrave': 224, u'aacute': 225, u'acirc': 226,
-    u'atilde': 227, u'auml': 228, u'aring': 229, u'aelig': 230, u'ccedil': 231,
-    u'egrave': 232, u'eacute': 233, u'ecirc': 234, u'euml': 235, u'igrave': 236,
-    u'iacute': 237, u'icirc': 238, u'iuml': 239, u'eth': 240, u'ntilde': 241,
-    u'ograve': 242, u'oacute': 243, u'ocirc': 244, u'otilde': 245, u'ouml': 246,
-    u'divide': 247, u'oslash': 248, u'ugrave': 249, u'uacute': 250, u'ucirc': 251,
-    u'uuml': 252, u'yacute': 253, u'thorn': 254, u'yuml': 255, u'OElig': 338,
-    u'oelig': 339, u'Scaron': 352, u'scaron': 353, u'Yuml': 376, u'circ': 710,
-    u'tilde': 732, u'ensp': 8194, u'emsp': 8195, u'thinsp': 8201, u'zwnj': 8204,
-    u'zwj': 8205, u'lrm': 8206, u'rlm': 8207, u'ndash': 8211, u'mdash': 8212,
-    u'lsquo': 8216, u'rsquo': 8217, u'sbquo': 8218, u'ldquo': 8220, u'rdquo': 8221,
-    u'bdquo': 8222, u'dagger': 8224, u'Dagger': 8225, u'hellip': 8230,
-    u'permil': 8240, u'lsaquo': 8249, u'rsaquo': 8250, u'euro': 8364,
-    u'trade': 8482,
-}
+# entity map
+entities = {u'quot': 34, u'amp': 38, u'apos': 39, u'lt': 60, u'gt': 62,
+            u'nbsp': 32, u'iexcl': 161, u'cent': 162, u'pound': 163,
+            u'curren': 164, u'yen': 165, u'brvbar': 166, u'sect': 167,
+            u'uml': 168, u'copy': 169, u'ordf': 170, u'laquo': 171,
+            u'not': 172, u'shy': 173, u'reg': 174, u'macr': 175,
+            u'deg': 176, u'plusmn': 177, u'sup2': 178, u'sup3': 179,
+            u'acute': 180, u'micro': 181, u'para': 182, u'middot': 183,
+            u'cedil': 184, u'sup1': 185, u'ordm': 186, u'raquo': 187,
+            u'frac14': 188, u'frac12': 189, u'frac34': 190, u'iquest': 191,
+            u'Agrave': 192, u'Aacute': 193, u'Acirc': 194, u'Atilde': 195,
+            u'Auml': 196, u'Aring': 197, u'AElig': 198, u'Ccedil': 199,
+            u'Egrave': 200, u'Eacute': 201, u'Ecirc': 202, u'Euml': 203,
+            u'Igrave': 204, u'Iacute': 205, u'Icirc': 206, u'Iuml': 207,
+            u'ETH': 208, u'Ntilde': 209, u'Ograve': 210, u'Oacute': 211,
+            u'Ocirc': 212, u'Otilde': 213, u'Ouml': 214, u'times': 215,
+            u'Oslash': 216, u'Ugrave': 217, u'Uacute': 218, u'Ucirc': 219,
+            u'Uuml': 220, u'Yacute': 221, u'THORN': 222, u'szlig': 223,
+            u'agrave': 224, u'aacute': 225, u'acirc': 226, u'atilde': 227,
+            u'auml': 228, u'aring': 229, u'aelig': 230, u'ccedil': 231,
+            u'egrave': 232, u'eacute': 233, u'ecirc': 234, u'euml': 235,
+            u'igrave': 236, u'iacute': 237, u'icirc': 238, u'iuml': 239,
+            u'eth': 240, u'ntilde': 241, u'ograve': 242, u'oacute': 243,
+            u'ocirc': 244, u'otilde': 245, u'ouml': 246, u'divide': 247,
+            u'oslash': 248, u'ugrave': 249, u'uacute': 250, u'ucirc': 251,
+            u'uuml': 252, u'yacute': 253, u'thorn': 254, u'yuml': 255,
+            u'OElig': 338, u'oelig': 339, u'Scaron': 352, u'scaron': 353,
+            u'Yuml': 376, u'circ': 710, u'tilde': 732, u'ensp': 8194,
+            u'emsp': 8195, u'thinsp': 8201, u'zwnj': 8204, u'zwj': 8205,
+            u'lrm': 8206, u'rlm': 8207, u'ndash': 8211, u'mdash': 8212,
+            u'lsquo': 8216, u'rsquo': 8217, u'sbquo': 8218, u'ldquo': 8220,
+            u'rdquo': 8221, u'bdquo': 8222, u'dagger': 8224,
+            u'Dagger': 8225, u'hellip': 8230, u'permil': 8240,
+            u'lsaquo': 8249, u'rsaquo': 8250, u'euro': 8364, u'trade': 8482}
 
-entityMap = {
-    352: u'S', 353: u's', 376: u'Y', 710: u'^', 732: u'~', 8194: u' ', 8195: u'  ',
-    8211: u'-', 8212: u'--', 8216: u"'", 8217: u"'", 8218: u"'", 8220: u'"',
-    8221: u'"', 8222: u'"', 8224: u'+', 8225: u'', 8230: u'...', 8240: u'%.',
-    8249: u'<', 8250: u'>', 8364: u'$', 8482: u'(tm)',
-}
 
 class Debug(object):
-    """Extra debugging class"""
 
-    def __str__(self):
-        return u'<%s %s>' % (self.__class__.__name__, self.__dict__)
+    """Extra debugging base class"""
 
-    __repr__ = __str__
+    def __repr__(self):
+        return u'<%s object at 0x%x: %s>' % (self.__class__.__name__, id(self),
+                                             self.__dict__)
 
 
 class Module(object):
+
+    """Base module class"""
+
     _any = re.compile(r'^(.+)$')
     pattern = re.compile(u'')
     enabled = True
@@ -99,21 +101,6 @@ class Module(object):
 
     def response(self, nick, args, **kwargs):
         return u'not implemented'
-
-
-class Error(Exception):
-    """Base Exception class"""
-
-    def __init__(self, msg=u''):
-        self.msg = msg
-        Exception.__init__(self)
-
-    def __str__(self):
-        if isinstance(self.msg, StringTypes):
-            return unicode(self.msg)
-        return unicode(repr(self.msg))
-
-    __repr__ = __str__
 
 
 class Request(object):
@@ -150,13 +137,16 @@ def cache_property(timeout=None):
                                      result=method(*args, **kwargs))
             return cache[method][u'result']
 
+        inner.__doc__ = method.__doc__
+        inner.__name__ = method.__name__
         return property(inner)
-
     return decorator
 
 
 class cache(object):
+
     """Decorator for caching return values"""
+
     _timeout = 3600
 
     def __init__(self, timeout=_timeout):
@@ -185,6 +175,7 @@ class cache(object):
 
 
 class throttle(object):
+
     """Decorator for throttling requests to prevent abuse/spamming"""
 
     # defaults
@@ -225,57 +216,36 @@ class throttle(object):
         return callback
 
 
-def stripHTML(data=None):
-    if data is None:
-        return
-
-    data = re_sup.sub(r'^\1', data)
-    data = re_tags.sub(u'', data)
-    data = re_br.sub(u'\n', data)
-    data = re_newlines.sub(u'\n', data)
-    data = unescape_entities(data)
+def stripHTML(data):
+    if data:
+        data = suptag_re.sub(r'^\1', data)
+        data = tags_re.sub(u'', data)
+        data = break_re.sub(u'\n', data)
+        data = newlines_re.sub(u'\n', data)
+        data = unescape_entities(data)
     return data
 
-def isUTF8(data = None, threshold = .25):
-    if (float(len(re_highascii.findall(data))) / float(len(data))) > threshold:
-        return True
-    else:
-        return False
-
-re_entity = re.compile(r'(&([^;]+);)')
-_entity_re = re.compile(r'^&#(x)?(\d+);$', re.I)
 
 def unescape_entities(text):
-    for entity, entityName in re_entity.findall(text):
-        if entityName in entityNames:
-            val = entityNames[entityName]
+    for entity, name in entity_re.findall(text):
+        if name in entities:
+            val = entities[name]
         else:
             try:
-                ishex, val = _entity_re.search(entity).groups()
+                ishex, val = charentity_re.search(entity).groups()
             except AttributeError:
+                log.warn(u"couldn't decode entity: %s" % entity)
                 continue
             base = 16 if ishex else 10
             val = int(val, base)
-
-        if val < 256:
-            converted = chr(val)
-        elif val in entityMap:
-            converted = entityMap[val]
-        else:
-            converted = u''
-
-        text = text.replace(entity, converted)
-
+        text = text.replace(entity, unichr(val))
     return text
 
-def slurp(filename):
-    fo = open(filename, u'rb')
-    data = None
-    try:
-        data = fo.read()
-    finally:
-        fo.close()
-    return data
+
+def slurp(path):
+    with open(path, u'rb') as file:
+        return file.read()
+
 
 def test_module(mod):
     main = mod()
