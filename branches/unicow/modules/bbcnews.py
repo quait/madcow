@@ -43,7 +43,7 @@ class Main(Module):
             if not query or query == u'headline':
                 url = self._world_url
             else:
-                url = self._search_url + urllib.quote(query)
+                url = self._search_url + urllib.quote(query.encode('utf-8'))
             item = feedparser.parse(url).entries[0]
             return u' | '.join(map(stripHTML,
                                    [item.link, item.title, item.description]))

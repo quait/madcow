@@ -24,6 +24,7 @@ from include.utils import stripHTML, Module
 from include.useragent import geturl
 from urlparse import urljoin
 import logging as log
+import urllib
 
 class Main(Module):
 
@@ -34,7 +35,7 @@ class Main(Module):
     re_newline = re.compile(r'[\r\n]+')
     re_def_break = re.compile(r'<span class="sense_break"/>')
     header = re.compile(u'^.*?:\xa0')
-    base_url = u'http://www.m-w.com/dictionary/'
+    base_url = 'http://www.m-w.com/dictionary/'
 
     def response(self, nick, args, kwargs):
         word = args[0].lower()
@@ -43,6 +44,7 @@ class Main(Module):
                 num = int(args[1])
             except:
                 num = 1
+            word = urllib.quote(word.encode('utf-8'))
             url = urljoin(self.base_url, word)
             doc = geturl(url)
             defs = self.re_defs.search(doc).group(1)

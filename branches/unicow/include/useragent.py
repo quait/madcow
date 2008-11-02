@@ -51,6 +51,10 @@ class UserAgent(object):
         log.debug(u'fetching url: %s' % url)
         url = list(urlparse.urlparse(url))
         if opts:
+            for key in opts:
+                val = opts[key]
+                if isinstance(val, unicode):
+                    opts[key] = val.encode('utf-8', 'replace')
             query = [urllib.urlencode(opts)]
             if url[4]:
                 query.append(url[4])

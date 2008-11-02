@@ -27,6 +27,7 @@ import urllib
 import logging as log
 
 class Main(Module):
+
     pattern = re.compile(r'^\s*joke(?:\s+(.+?))?\s*$', re.I)
     require_addressing = True
     help = (u'joke <oneliners | news | signs | nerd | professional | quotes | '
@@ -44,6 +45,7 @@ class Main(Module):
         else:
             query = u' '.join(query.split())
             query = query.replace(u' ', u'_')
+            query = query.encode('utf-8', 'replace')
             query = urllib.quote(query) + u'.php'
             url = urljoin(self.baseurl, query)
         try:

@@ -24,12 +24,15 @@ import random
 from include.utils import Module, stripHTML
 from include.useragent import geturl
 import logging as log
+from include import encoding
 
 class Bash(object):
 
     random = u'http://www.bash.org/?random'
     bynum = u'http://www.bash.org/?num'
-    search = u'http://www.bash.org/?search=query&show=100'
+    search = u'http://www.bash.org/'
+    query = 'search'
+    opts = dict(show=100)
     entries = re.compile(u'<p class="qt">(.*?)</p>', re.DOTALL)
 
 
@@ -37,7 +40,9 @@ class QDB(object):
 
     random = u'http://qdb.us/random'
     bynum = u'http://qdb.us/num'
-    search = u'http://qdb.us/?search=query&limit=100&approved=1'
+    search = u'http://qdb.us/'
+    query = 'search'
+    opts = dict(limit=100, approved=1)
     entries = re.compile(u'<td[^>]+><p>(.*?)</p>', re.DOTALL)
 
 
@@ -45,7 +50,9 @@ class Limerick(object):
 
     random = u'http://www.limerickdb.com/?random'
     bynum = u'http://www.limerickdb.com/?num'
-    search = u'http://www.limerickdb.com/?search=query&number=100'
+    search = u'http://www.limerickdb.com/'
+    query = 'search'
+    opts = dict(number=100)
     entries = re.compile(u'<div class="quote_output">\s*(.*?)\s*</div>',
                          re.DOTALL)
 
@@ -57,8 +64,7 @@ class Main(Module):
     help = u'<bash|qdb|limerick> [#|query] - get stupid IRC quotes'
     sources = {u'bash': QDB(),
                u'qdb': QDB(),
-               u'limerick': Limerick(),
-               }
+               u'limerick': Limerick()}
     _error = u'Having some issues, make some stupid quotes yourself'
 
     def response(self, nick, args, kwargs):
@@ -75,11 +81,16 @@ class Main(Module):
                 num = None
             if num:
                 url = source.bynum.replace(u'num', unicode(num))
+                opts = None
             elif query:
-                url = source.search.replace(u'query', query)
+                url = source.search
+                opts = dict(source.opts)
+                opts[source.query] = query.encode(encoding.detect(query),
+                                                  'replace')
             else:
                 url = source.random
-            doc = geturl(url)
+                opts = None
+            doc = geturl(url, opts=opts)
             entries = source.entries.findall(doc)
             if query:
                 entries = [entry for entry in entries if query in entry]

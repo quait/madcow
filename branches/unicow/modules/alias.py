@@ -41,15 +41,16 @@ class Alias(object):
     def __init__(self, key, val):
         self.key = key
         self.val = val
-        self.pattern = re.compile(r'\b%s\b' % re.escape(key), re.I)
+        self.pattern = re.compile(re.escape(key), re.I)
 
 
 class AliasDB(object):
 
     """Interface to alias flat file database"""
 
-    def __init__(self, path):
+    def __init__(self, path, charset='ascii'):
         self.path = path
+        self.charset = charset
         self.aliases = []
         if not os.path.exists(path):
             with open(path, u'wb') as file:
@@ -58,6 +59,8 @@ class AliasDB(object):
             for line in file:
                 try:
                     key, val = line.strip().split(None, 1)
+                    key = key.decode(self.charset, 'replace')
+                    val = val.decode(self.charset, 'replace')
                     self.aliases.append(Alias(key, val))
                 except Exception, error:
                     raise AliasError(u'problem parsing db: %s' % error)
@@ -65,7 +68,9 @@ class AliasDB(object):
     def save(self):
         with open(self.path, u'wb') as file:
             for alias in self:
-                print >> file, u'%s %s' % (alias.key, alias.val)
+                key = alias.key.encode(self.charset, 'replace')
+                val = alias.val.encode(self.charset, 'replace')
+                print >> file, '%s %s' % (key, val)
 
     def delete(self, index):
         self.aliases.pop(index)
@@ -103,7 +108,8 @@ class Main(Module):
     def __init__(self, madcow=None):
         self.madcow = madcow
         self.db = AliasDB(os.path.join(madcow.prefix, u'data',
-                                       u'db-%s-alias' % madcow.namespace))
+                                       u'db-%s-alias' % madcow.namespace),
+                          charset=madcow.charset)
 
     def response(self, nick, args, kwargs):
         try:
