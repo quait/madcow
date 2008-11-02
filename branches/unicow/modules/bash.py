@@ -85,8 +85,7 @@ class Main(Module):
             elif query:
                 url = source.search
                 opts = dict(source.opts)
-                opts[source.query] = query.encode(encoding.detect(query),
-                                                  'replace')
+                opts[source.query] = query
             else:
                 url = source.random
                 opts = None
