@@ -170,14 +170,11 @@ class Main(Module):
         # remove empty query settings, these are usually form artifacts
         # and put them in order
         try:
-            query = query.split(u'&')
-            query = [part.split(u'=', 1) for part in query]
-            query = [[x, y] for x, y in query if len(y)]
-            query = [u'='.join([x, y]) for x, y in query]
-            query = sorted(query)
-            query = u'&'.join(query)
+            query = u'&'.join(sorted(
+                    u'='.join(i)
+                    for i in [p.split(u'=', 1) for p in query.split(u'&')]
+                    if len(i) == 2 and i[1]))
         except:
-            # probably not valid query string, just u"?newmeme"
             query = u''
         # ignore fragments
         fragment = u''
