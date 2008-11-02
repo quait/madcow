@@ -196,10 +196,6 @@ class Madcow(object):
         try:
             self.lock.acquire()
             try:
-                if isinstance(response, str):
-                    log.warn('madcow got a raw string: %s' % response)
-                    response = encoding.convert(response)
-                response = response.encode(self.charset, 'replace')
                 self.protocol_output(response, req)
             except Exception, error:
                 log.error(u'error in output: %s' % repr(response))
@@ -355,7 +351,7 @@ class Madcow(object):
 
         logfile = open(path, u'a')
         try:
-            logfile.write(line)
+            logfile.write(line.encode(self.charset, 'replace'))
         finally:
             logfile.close()
 

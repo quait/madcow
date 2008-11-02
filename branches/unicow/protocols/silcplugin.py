@@ -31,13 +31,14 @@ import re
 from include.colorlib import ColorLib
 import logging as log
 from time import sleep, time as unix_time
+from include import encoding
 
 class SilcPlugin(madcow.Madcow, silc.SilcClient):
 
     def __init__(self, config, prefix):
         self.colorlib = ColorLib(u'mirc')
         madcow.Madcow.__init__(self, config, prefix)
-        keys = silc.create_key_pair(u'silc.pub', u'silc.priv', passphrase=u'')
+        keys = silc.create_key_pair('silc.pub', 'silc.priv', passphrase='')
         nick = self.config.silcplugin.nick
         silc.SilcClient.__init__(self, keys, nick, nick, nick)
         self.channels = self._delim.split(self.config.silcplugin.channels)
@@ -90,6 +91,8 @@ class SilcPlugin(madcow.Madcow, silc.SilcClient):
             req.sendto = channel
             req.channel = channel.channel_name
 
+        req.message = req.message.decode(encoding.detect(req.message),
+                                         'replace')
         req.message = self.colorlib.strip_color(req.message)
         self.check_addressing(req)
 
@@ -122,16 +125,6 @@ class SilcPlugin(madcow.Madcow, silc.SilcClient):
         if not message:
             return
 
-        # XXX is this necessary now that main bot encodes to latin1/utf8?
-        # BB: Yup, still needed :)
-        # CJ: your mom.
-        # CJ: PS this makes no damn sense actually.  You don't send
-        # decoded unicode objects to a socket.  wtf?  at some point it's
-        # going to get encoded into raw bytes anyway.  i suspect it's
-        # doing that encoding internally and totally disregarding our
-        # wishes in what character set it uses
-        message = message.decode(self.config.main.charset, u'ignore')
-
         if req.colorize:
             message = self.colorlib.rainbow(message)
         if req.private:
@@ -148,6 +141,11 @@ class SilcPlugin(madcow.Madcow, silc.SilcClient):
             delta = unix_time() - self.last_response
             if delta < self.delay:
                 sleep(self.delay - delta)
+
+            # XXX i guess pysilc expects unicode.. so, no control over
+            # what the encoding is, sadly... silc FTL
+            #line = line.encode(self.charset, 'replace')
+
             callback(sendto, line)
             self.last_response = unix_time()
 

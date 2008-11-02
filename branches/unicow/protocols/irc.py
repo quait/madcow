@@ -130,36 +130,36 @@ class IRCProtocol(Madcow):
         if not message:
             return
 
-        # XXX nearly all of this needs to happen BEFORE encoding
-
-        # IRC really doesn't like null characters
-        message = message.replace('\x00', '')
-        if not message:
-            return
-
-        # color output if requested # XXX this needs to happen before encoding
+        # color output if requested
         if req.colorize:
             style = random.choice(self.colorlib._rainbow_map.keys())
             message = self.colorlib.rainbow(message, style=style)
 
         # MUST wrap if unset because irc will boot you for exceeding maxlen
-        # XXX this needs to happen before encoding too!
         wrap = self.config.irc.wrapsize
-        if wrap is None or wrap > 400:
+        if not wrap or wrap > 400:
             wrap = 400
 
         # each line gets its own privmsg
         output = []
         for line in message.splitlines():
+            line = line.rstrip()
             if len(line) > wrap:
                 for wrapped in textwrap.wrap(line, wrap):
                     output.append(wrapped)
             else:
                 output.append(line)
 
+        for i in range(len(output)):
+            # now we can encode it properly
+            output[i] = output[i].encode(self.charset, 'replace')
+            # IRC really doesn't like null characters
+            output[i] = output[i].replace('\x00', '')
+
         # send to IRC socket
         for line in output:
-            self._privmsg(req.sendto, line)
+            if line:
+                self._privmsg(req.sendto, line)
 
     def _privmsg(self, sendto, line):
         delta = unix_time() - self.last_response

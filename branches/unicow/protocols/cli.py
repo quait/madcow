@@ -86,7 +86,7 @@ class ConsoleProtocol(Madcow):
     def protocol_output(self, message, req=None):
         if req is not None and req.colorize is True:
             message = self.colorlib.rainbow(message)
-        print message
+        print message.encode(self.charset, 'replace')
 
 
 class ProtocolHandler(ConsoleProtocol):
