@@ -52,7 +52,8 @@ class Yahoo(object):
         url = Yahoo._quote_url.replace(u'SYMBOL', symbol)
         page = geturl(url)
         soup = BeautifulSoup(page)
-        company = u' '.join([unicode(item) for item in soup.find(u'h1').contents])
+        company = u' '.join([unicode(item)
+                             for item in soup.find(u'h1').contents])
         company = stripHTML(company)
         tables = soup.findAll(u'table')
         if not tables:
@@ -64,7 +65,7 @@ class Yahoo(object):
         last_price = 0.0
 
         # Yahoo emits numbers in the US format of course..
-        locale.setlocale(locale.LC_NUMERIC, u"en_US.UTF-8")
+        locale.setlocale(locale.LC_NUMERIC, "en_US.UTF-8")
         for row in rows:
             key, val = row.findAll(u'td')
             key = unicode(key.contents[0])

@@ -41,11 +41,18 @@ class Main(Module):
             email = self.learn.lookup(u'email', sendto)
             if email is None:
                 return u"%s: I don't know the email for %s" % (nick, sendto)
-            body = u'To: %s <%s>\n' % (sendto, email)
-            body += u'From: %s\n' % (self.config.smtp.sender)
-            body += u'Subject: Summon from %s' % nick
-            body += u'\n'
-            body += u'You were summoned by %s. Reason: %s' % (nick, reason)
+
+            # just make all this shit ASCII, email is best that way...
+            sendto = sendto.encode('ascii', 'replace')
+            email = email.encode('ascii', 'replace')
+            nick = nick.encode('ascii', 'replace')
+            reason = reason.encode('ascii', 'replace')
+
+            body = 'To: %s <%s>\n' % (sendto, email)
+            body += 'From: %s\n' % (self.config.smtp.sender)
+            body += 'Subject: Summon from %s' % nick
+            body += '\n'
+            body += 'You were summoned by %s. Reason: %s' % (nick, reason)
 
             smtp = SMTP(self.config.smtp.server)
             if len(self.config.smtp.user):
