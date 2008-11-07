@@ -44,7 +44,7 @@ class SilcPlugin(madcow.Madcow, silc.SilcClient):
         self.channels = self._delim.split(self.config.silcplugin.channels)
 
         # throttling
-        self.delay = self.config.irc.delay / float(1000)
+        self.delay = self.config.silcplugin.delay / float(1000)
         self.last_response = 0.0
 
     def botname(self):
