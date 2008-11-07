@@ -192,6 +192,8 @@ class IRCProtocol(Madcow):
             req.sendto = req.channel
             req.addressed = False
 
+        req.message = req.message.decode(self.config.main.charset, 'replace')
+
         # strip control codes from incoming lines
         req.message = self.colorlib.strip_color(req.message)
 

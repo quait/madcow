@@ -43,16 +43,16 @@ class Main(Module):
                 return u"%s: I don't know the email for %s" % (nick, sendto)
 
             # just make all this shit ASCII, email is best that way...
-            sendto = sendto.encode('ascii', 'replace')
             email = email.encode('ascii', 'replace')
-            nick = nick.encode('ascii', 'replace')
-            reason = reason.encode('ascii', 'replace')
+            if reason:
+                reason = reason.encode('ascii', 'replace')
+            anick = nick.encode('ascii', 'replace')
 
-            body = 'To: %s <%s>\n' % (sendto, email)
+            body = 'To: %s <%s>\n' % (sendto.encode('ascii', 'replace'), email)
             body += 'From: %s\n' % (self.config.smtp.sender)
-            body += 'Subject: Summon from %s' % nick
+            body += 'Subject: Summon from %s' % anick
             body += '\n'
-            body += 'You were summoned by %s. Reason: %s' % (nick, reason)
+            body += 'You were summoned by %s. Reason: %s' % (anick, reason)
 
             smtp = SMTP(self.config.smtp.server)
             if len(self.config.smtp.user):

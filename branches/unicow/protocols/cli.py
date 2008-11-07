@@ -57,6 +57,7 @@ class ConsoleProtocol(Madcow):
 
             if input.lower() == u'history':
                 print u'history: %s' % repr(self.shell.history)
+                continue
 
             if input.lower() == u'clear':
                 sys.stdout.write(self._clear)
